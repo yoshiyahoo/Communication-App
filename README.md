@@ -2,5 +2,4 @@
 CS401 Group Project
 
 # Members
-Adam Haise
-Anna Hernandez
+Adam Haise, Anna Hernandez
