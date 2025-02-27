@@ -9,11 +9,11 @@
 - [x] Kamari, 1 hr late, got stuck on 580
 
 # Agreements
-Anna - Working on Basic Use Cases
-Kamari - Refining Requirements
-Adam - Basic Class Suggestions
-Josiah - Track Minutes, work on github stuff, format minutes into document
-Jacob - 
+- Anna - Working on Basic Use Cases
+- Kamari - Refining Requirements
+- Adam - Basic Class Suggestions
+- Josiah - Track Minutes, work on github stuff, format minutes into document
+- Jacob - 
 
 # What Happened
 
