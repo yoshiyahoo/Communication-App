@@ -4,7 +4,7 @@
 # Attendance
 - [x] Adam
 - [x] Anna
-- [ ] Jacob
+- [ ] Jacob, In the Philippines
 - [x] Josiah
 - [x] Kamari
 
