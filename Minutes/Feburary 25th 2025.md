@@ -13,4 +13,9 @@ Nothing binding
 
 # What Happened
 Worked on SRS
-Almost completed
+- External interface requirements
+- Assumptions
+- Dependencies
+- Common requirements
+- Scope
+- Defined modules
