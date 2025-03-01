@@ -13,7 +13,7 @@
 - Kamari - Refining Requirements
 - Adam - Basic Class Suggestions
 - Josiah - Track Minutes, work on github stuff, format minutes into document
-- Jacob - 
+- Jacob - Refining Requirements
 
 # What Happened
 
