@@ -1,5 +1,5 @@
 # Time
-1 hr 10 mins, 3 - 4:10 
+1 hr 10 mins, 3 - 4:10pm
 
 # Attendance
 - [x] Adam 
