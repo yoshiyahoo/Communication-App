@@ -1,0 +1,15 @@
+website: https://sequencediagram.org/
+
+
+title Logout Sequence
+actor User
+participant GUI
+participant Client
+participant Server
+
+User->GUI:Clicks Logout Button
+GUI->Client:Calls the logout button code in display()
+Client->Server:socket.close()
+Client-->GUI:loginScreen()
+note right of Server:run() Thread loop checks if any socket in clients[] \nare closed and calls logoutHandler() if any are to \nclean up clients[].
+Server->Server:logoutHandler()
