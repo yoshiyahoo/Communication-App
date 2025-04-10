@@ -1,0 +1,20 @@
+@startuml
+title Use Case 3 (User Opens Chat With Other Users)
+actor User
+participant GUI
+participant Client
+participant Server
+
+
+
+User -> GUI:Double Clicks New Chat Button
+GUI -> Client: GUI sends request to client for chat log
+Client -> Server: Client sends request to Server for chat log
+Server -> Database: Server finds log file of message between users.
+Server -> Client: Server returns log file of message back to client
+
+Client -> GUI: Chat is overridden
+
+
+@enduml
+S
