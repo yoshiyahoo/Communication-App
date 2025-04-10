@@ -1,0 +1,20 @@
+title  User Sends Message Sequence
+actor User
+participant Client
+participant Server
+participant RqstStore
+
+
+
+User->Client: makeChat()
+alt Network Failure
+Client->Server:Fails to connect
+Server-->Client: Message marked as failed to send
+User->Client: Try to resend a message
+end
+Client->Server: sendMsg(Message msg)
+Server->RqstStore: addtoOutgoing(Message msg)
+Server<--RqstStore: getIncoming()
+Server-->Client: sendChat()
+Client->Client: receiveMessage(Message msg)
+Client-->User: display()
