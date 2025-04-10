@@ -1,0 +1,24 @@
+title Create Group Chat Sequence
+
+actor User
+
+
+User->GUI: Click "Create Groupchat" Button
+GUI->User: Prompt to Choose Members
+User->GUI: Select members
+GUI->Client: Call makeChat()
+Client->Server: Send log request
+
+alt Log file does not exist
+    Server->Server: Create new log file
+    Server->Client: Send new log file
+end
+
+Client->GUI: Update UI with chat
+GUI->User: Display created group chat
+
+alt Chat creation fails
+    Server->Client: Error (failed to create)
+    Client->GUI: Display error message
+    GUI->User: Show error
+end
