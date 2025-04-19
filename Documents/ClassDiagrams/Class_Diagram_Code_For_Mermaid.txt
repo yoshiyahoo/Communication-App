@@ -1,0 +1,138 @@
+---
+config:
+  class:
+    hideEmptyMembersBox: true
+  layout: elk
+  look: classic
+  theme: mc
+---
+classDiagram
+direction LR
+    class Server {
+	    Private Socket clients[]
+	    Private Database data
+	    Private ServerSocket server
+	    Private Message msg
+	    Private RqstStore requestStore
+	    Public void main(String[] args)
+	    Private void initialStartUp()
+	    Private boolean loginHandling(Login login)
+	    Private void sendMsgHistory()
+	    Private void sendUserList()
+	    Private void sendChat()
+	    Private void logoutHandler()
+	    Private void handleClients(Socket client)
+	    Private void handleClientOfflineMsgQ(Socket client)
+	    Public Message getDatabaseMessages(Socket client)
+	    Private void checkAndSendOfflineMsg(Socket client)
+    }
+    class Client {
+	    Pirvate Socket socket
+	    Private QueueForOfflineMessages offlineQ[]
+	    Private Account account
+	    Private Message msg
+	    Private String[] userList
+	    Private GUI display
+	    Private RqstStore requestStore
+	    Private Chat[] chats
+	    Public void main(String[] args)
+	    Public QueueForOfflineMessages getMessageQueue()
+	    Public void sendMsg(Message msg)
+	    Public void receiveMsg(Message msg)
+	    Public void display()
+	    Public boolean login(String username, String password)
+	    Private void getUserListFromServer()
+	    Private void searchUserList()
+	    Public void makeChat()
+    }
+    class Database {
+	    Private ArrayList fileSystem
+	    Private boolean inUse
+	    Private Message msg
+	    Private Chat[] chats
+	    Public Datebase()
+	    Public Message getMessage(String accountName, int time)
+	    Public void saveMessage(Message msg)
+	    Public Chat getChat()
+	    Public void addChat()
+	    Public Account getAccount(String name)
+    }
+    class RqstStore {
+	    Private Queue incoming
+	    Private Queue outgoing
+	    Public RqstHandle()
+	    Public Message getIncoming()
+	    Public void addToOutgoing(Message msg)
+    }
+    class Message {
+	    Priavte String msg
+	    Priavte int time
+	    Priavte String accountName
+	    Public Message(String msg, Int time, String accountName)
+	    Public String getMsg()
+	    Public int getTime()
+	    Public String getAccountName()
+    }
+    class Login {
+	    Private String username
+	    Private String password
+	    Public Login(String username, String password)
+	    Public String getUsername()
+	    Public String getPassword()
+    }
+    class BackgroundHandlerServer["BackgroundHandlerServer implements Runnable"] {
+	    Public void run()
+    }
+    class BackgroundHandlerClient["BackgroundHandlerClient implements Runnable"] {
+	    Public void run()
+    }
+    class Chat {
+	    Private String[] users
+	    Private Msg[] msgHistory
+	    Private String chatName
+	    Public Chat()
+	    Public Chat(String[] users, Msg[] msgHistory, String, chatName)
+	    Public void addUser(String user)
+	    Public void removeUser(String user)
+	    Public Msg[] getMsgHistory()
+    }
+    class Account {
+	    Private Role role
+	    Private String name
+	    Static Private int counter
+	    Private int ID
+	    Public Account(Role role, String name)
+	    Public void setRole(Role role)
+	    Public void setName(String name)
+	    Public Role getRole()
+	    Public String getName()
+	    Public int getID()
+    }
+    class GUI {
+	    Private Client client
+	    Public GUI(Client)
+	    Public void loginScreen()
+	    Public void mainScreen()
+    }
+    class Role {
+	    Administrator
+	    Employee
+    }
+
+    Server "0..250000" *-- "1" Client
+    Server "1" o-- "1" Database
+    Server "1" o-- "1" RqstStore
+    Server "1" *-- "0..1" Message
+    Server "0..* {Unique}" -- "1" Login
+    Server "1" -- "1" BackgroundHandlerServer
+    Client "1" -- "1" BackgroundHandlerClient
+    Client "1" *-- "0..1" Message
+    Client "1" o-- "1" RqstStore
+    Client "0..* {Unique}" -- "1" Login
+    Client "0..* {Unique}" o-- "1" Chat
+    Client "1" o-- "1" GUI
+    Client "1" o-- "1" Account
+    Account "1" -- "1" Role
+    Database "1" -- "1" Account
+    Database "1" *-- "0..1" Message
+    Database "0..* {Unique}" o-- "1" Chat
