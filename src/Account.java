@@ -4,7 +4,7 @@ public class Account {
     private static int counter = 0;
     private int ID;
    
-    public Account(Role role, String name, String username) {
+    public Account(Role role, String name) {
     	this.role = role;
     	this.name = name;
     	this.ID = counter++;
