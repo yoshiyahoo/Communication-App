@@ -3,7 +3,7 @@ public class Account {
     private String name;
     private static int counter = 0;
     private int ID;
-
+   
     public Account(Role role, String name) {
     	this.role = role;
     	this.name = name;
@@ -38,5 +38,5 @@ public class Account {
     	
     	return this.ID;
 
-    }
+    } 
 }
