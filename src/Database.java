@@ -1,38 +1,64 @@
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.List;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 
 public class Database {
-    private List<File> fileSystem;
+    private HashMap<Integer, String> users;
+    private Path chats;
 
-    // why are these fields here?
-    private boolean inUse; // what is this for?
-    private Message msg;
-    private Chat[] chats;
+    public Database() throws IOException {
+        // populate the Users hashmap using users file
+        users = new HashMap<>();
+        File usersFile = new File("./database/Users.txt");
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(usersFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] cols = line.split(",");
+                if (cols.length == 2) {
+                    int id = Integer.parseInt(cols[0].trim());
+                    String name = cols[1].trim();
+                    users.put(id, name);
+                } else {
+                    throw new IOException("Invalid line format in Users.txt: " + line);
+                }
+            }
+        }
 
-    // How do we read the data into the database?
-    public Database() {
-
+        // get Chats path
+        Path currentRelativePath = Path.of("");
+        String s = currentRelativePath.toAbsolutePath().toString();
+        chats = Path.of(s + "/database/Chats/");
     }
 
-    // what happens if there are two messages at the same time?
-    // Wouldn't we want to pass the account itself and not just the name? idk
     public Message getMessage(String accountName, int time) {
 
     }
 
-    // which chat is this message saved in?
     public void saveMessage(Message msg) {
 
     }
 
-    // how do we search for a chat?
     public Chat getChat() {
 
     }
 
-    // how do we add a chat if we don't get one?
-    public void addChat() {
-
+    public void addChat(String[] userList, String chatName) throws IOException {
+        // create a new chat
+        Chat chat = new Chat(userList, new Message[0], chatName);
+        // save the chat to the database
+        try {
+            Files.createFile(chats.resolve(chatName + ".txt"));
+        } catch (FileAlreadyExistsException faee) {
+            // alert user that the chat already exists
+            // TODO use uuids instead if duplicate chat names are okay
+            System.out.println("Chat with this name already exists.");
+        }
     }
 
     public Account getAccount(String name) {
