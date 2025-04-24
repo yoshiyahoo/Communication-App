@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Queue;
@@ -13,7 +15,7 @@ public class Client {
     private Chat[] chats;
 
     public static void main(String[] args) {
-
+    	
     }
 
     // why is this method needed?
@@ -37,16 +39,26 @@ public class Client {
 
     }
 
-    private void getUserListFromServer() {
-
+    /**
+     * Called by main for getting chat list for clients account after login.
+     * 
+     * @param chatInputStream	An ObjectInputStream for retrieving chats[] after login
+     */
+    private void getChatFromServer(ObjectInputStream chatInputStream) {
+    	try {
+			this.chats = (Chat[]) chatInputStream.readObject();
+			
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
      * This takes in a partial name entry from a user search and returns an ArrayList<String>
      * that has all user's names that contains partialName String.
      * 
-     * @param partialName
-     * @return ArrayList<String> for all names hat contains partialName
+     * @param partialName	A partial name string for searching
+     * @return 				ArrayList<String> for all names hat contains partialName
      */
     private ArrayList<String> searchUserList(String partialName) {
     	ArrayList<String> temp = new ArrayList<String>();
