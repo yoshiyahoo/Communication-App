@@ -37,6 +37,12 @@ public class Database {
     // key = username (non-admin), val = set of chatnames w/ user
     private HashMap<String, HashSet<String>> userChatMap;
 
+    /**
+     * Constructor for Database class
+     * loads users and chats from files
+     * 
+     * @throws IOException 
+     */
     public Database() throws IOException {
         // get users into acct map
         {
@@ -82,14 +88,21 @@ public class Database {
         }
     }
 
-    // TODO change ldt to actual localDateTime
-    public List<Message> getMessages(String accountName, Date ldt) {
+    /**
+     * Get all messages in a given chat
+     * based on sender and send time
+     * 
+     * @param accountName Name of sender
+     * @param ldt Time message was sent
+     * @return List of messages, ordered by chatname
+     */
+    public List<Message> getMessages(String accountName, LocalDateTime ldt) {
         List<Message> mList = null;
 
         for(String chatName : userChatMap.get(accountName)) {
             Chat toCheck = chatNameObjMap.get(chatName);
             for(Message m : toCheck.getMsgHistory()) {
-                if(m.getTime().compareTo(ldt) != 0) continue;
+                if(!m.getTime().equals(ldt)) continue;
                 if(m.getAccountName().equals(accountName)) {
                     if(mList == null) mList = new ArrayList<>();
                     mList.addLast(m);
@@ -101,6 +114,13 @@ public class Database {
     }
 
     // TODO get method for adding message to chat obj
+    /**
+     * Save new message to chat obj msgHistory
+     * and to chat log file
+     *  
+     * @param msg Message that needs to be saved
+     * @throws IOException
+     */
     public void saveMessage(Message msg) throws IOException {
         Path filePath = Path.of(msg.getChatname() + ".txt");
 
@@ -111,10 +131,23 @@ public class Database {
         );    
     }
 
+    /**
+     * Get chat object with chatName
+     * 
+     * @param chatName Name of desired chat
+     * @return Chat object with chatName
+     */
     public Chat getChat(String chatName) {
         return chatNameObjMap.get(chatName);
     }
 
+    /**
+     * Create a new chat in the database files
+     * 
+     * @param userList Userlist for the chat
+     * @param chatName Name of the chat
+     * @throws IOException
+     */
     public void addChat(String[] userList, String chatName) throws IOException {
         Chat toAdd = new Chat(userList, null, chatName);
         chatNameObjMap.put(chatName, toAdd);
@@ -128,6 +161,12 @@ public class Database {
         }
     }
 
+    /**
+     * Get account object with name
+     * 
+     * @param name Name of desired account
+     * @return Account object with name
+     */
     public Account getAccount(String name) {
         return acctNameObjMap.get(name);
     }
