@@ -1,9 +1,5 @@
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,7 +7,6 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -65,7 +60,15 @@ public class Database {
             
             int dotIndex = file.getName().indexOf('.');
             String chatName = file.getName().substring(0, dotIndex);
+            
+            // NOTE: imma be lazy and assume that if user is admin
+            // they wouldn't be on list
             String[] userList = lines.get(0).split(",");
+            Account[] acctList = Arrays.stream(userList)
+            		.map(userName -> new Account(Role.EMPLOYEE, userName))
+            		.toArray(Account[]::new);
+            
+            
             Message[] msgHistory = lines.stream()
                 .skip(1)
                 .map(line -> line.split(","))
@@ -76,7 +79,7 @@ public class Database {
                 ))
                 .toArray(Message[]::new);
 
-            chatNameObjMap.put(chatName, new Chat(userList, msgHistory, chatName));
+            chatNameObjMap.put(chatName, new Chat(acctList, msgHistory, chatName));
 
             // add chat to userChatMap for each user
             for(String user : userList) {
@@ -149,7 +152,11 @@ public class Database {
      * @throws IOException
      */
     public void addChat(String[] userList, String chatName) throws IOException {
-        Chat toAdd = new Chat(userList, null, chatName);
+        Account[] acctList = Arrays.stream(userList)
+        		.map(userName -> new Account(Role.EMPLOYEE, userName))
+        		.toArray(Account[]::new);
+    	
+    	Chat toAdd = new Chat(acctList, null, chatName);
         chatNameObjMap.put(chatName, toAdd);
         
         // add chat name for each user
