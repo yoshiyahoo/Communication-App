@@ -1,30 +1,35 @@
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 /*
 This is a chat that contains users and messages
  */
 // Needs to implement Serializable?
-public class Chat {
-    private String[] users; // can't we make this accounts?
-    private Message[] msgHistory;
+public class Chat implements Serializable {
+    private List<Account> users; // can't we make this accounts?
+    private List<Message> msgHistory;
     private String chatName;
 
-    // why do we have two constructors here?
-    public Chat() {
-
+    public Chat(Account[] users, Message[] msgHistory, String chatName) {
+    	this.users = Arrays.asList(users);
+    	this.msgHistory = Arrays.asList(msgHistory);
+    	this.chatName = chatName;
     }
 
-    public Chat(String[] users, Message[] msgHistory, String chatName) {
-
+    public void addUser(Account account) {
+    	this.users.add(account);
     }
 
-    public void addUser() {
-
+    public void removeUser(Account account) {
+    	this.users.remove(account);
     }
-
-    public void removeUser() {
-
+    
+    // Added extra methods
+    public void addMessage(Message msg) {
+    	msgHistory.add(msg);
     }
 
     public Message[] getMsgHistory() {
-
+    	return (Message[]) this.msgHistory.toArray();
     }
 }
