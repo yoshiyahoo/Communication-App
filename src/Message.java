@@ -16,11 +16,10 @@ public class Message implements Serializable {
 	 * @param accountName	A String of the name from the current account trying to send Message.
 	 * @param chatname		A name of the Chat the new Message is being made for.
 	 * @param chatID		The ID integer for the given Chat the Message is being made for.
-	 * @param creationTime	A LocalDateTime().now() pass to generate a Message creation time.
 	 */
-	public Message(String msg, String accountName, String chatname, int chatID, LocalDateTime creationTime) {
+	public Message(String msg, String accountName, String chatname, int chatID) {
 		this.msg = msg;
-		this.time = creationTime;
+		this.time = LocalDateTime.now();
 		this.accountName = accountName;
 		this.chatname = chatname;
 		this.chatID = chatID;
