@@ -7,7 +7,6 @@ public class Message implements Serializable {
 	private LocalDateTime time;
 	private String accountName;
 	private String chatname;
-	private int chatID;
 
 	/**
 	 * Only constructor for Message class
@@ -15,14 +14,12 @@ public class Message implements Serializable {
 	 * @param msg			A string of the user message to be sent over network.
 	 * @param accountName	A String of the name from the current account trying to send Message.
 	 * @param chatname		A name of the Chat the new Message is being made for.
-	 * @param chatID		The ID integer for the given Chat the Message is being made for.
 	 */
-	public Message(String msg, String accountName, String chatname, int chatID) {
+	public Message(String msg, String accountName, String chatname) {
 		this.msg = msg;
 		this.time = LocalDateTime.now();
 		this.accountName = accountName;
 		this.chatname = chatname;
-		this.chatID = chatID;
 	}
 
 	/**
@@ -59,14 +56,5 @@ public class Message implements Serializable {
 	 */
 	public String getChatname() {
 		return this.chatname;
-	}
-
-	/**
-	 * For retrieving the integer ID of the Chat this Message was made for.
-	 * 
-	 * @return	The integer for the Chat ID this Message is tied to.
-	 */
-	public int getChatID() {
-		return this.chatID;
 	}
 }
