@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 //These are text messages that will be passed between the server and client application
@@ -25,7 +26,11 @@ public class Message implements Serializable {
 		this.chatID = chatID;
 	}
 
-	/**
+	public Message(String string, LocalDateTime localDateTime, String string2) {
+        //TODO Auto-generated constructor stub
+    }
+
+    /**
 	 * For retrieving the message string from this Message Object.
 	 * 
 	 * @return	The message string from this Object.

@@ -2,66 +2,133 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
+/*
+ * User.txt schema
+ * ROLE,NAME
+ * 
+ * Chat folder schema
+ * filename=[chatname].txt
+ * 
+ * user1,user2,user3...
+ * TIME,USERNAME,MSG1
+ * TIME,USERNAME,MSG2
+ * TIME,USERNAME,MSG3
+ * ...
+ */
 
 public class Database {
-    private HashMap<Integer, String> users;
-    private Path chats;
+    private HashMap<String, Account> acctNameObjMap;
+    private HashMap<String, Chat> chatNameObjMap;
+
+    // key = username (non-admin), val = set of chatnames w/ user
+    private HashMap<String, HashSet<String>> userChatMap;
 
     public Database() throws IOException {
-        // populate the Users hashmap using users file
-        users = new HashMap<>();
-        File usersFile = new File("./database/Users.txt");
-        
-        try (BufferedReader reader = new BufferedReader(new FileReader(usersFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+        // get users into acct map
+        {
+            List<String> lines = Files.readAllLines(Paths.get("./Database/Users.txt"));
+            for(String line : lines) {
                 String[] cols = line.split(",");
-                if (cols.length == 2) {
-                    int id = Integer.parseInt(cols[0].trim());
-                    String name = cols[1].trim();
-                    users.put(id, name);
-                } else {
-                    throw new IOException("Invalid line format in Users.txt: " + line);
+                Role r = (cols[0].equals("admin"))? Role.ADMINISTRATOR : Role.EMPLOYEE;
+                acctNameObjMap.put(cols[1], new Account(r, cols[1]));
+            }
+        }
+
+        // get chats into chat map
+        File chatsFolder = new File("./Database/Chats");
+        File[] files = chatsFolder.listFiles();
+        if (files == null) return;
+
+        for(File file : files) {
+            if(!file.isFile()) continue;
+            List<String> lines = Files.readAllLines(file.toPath());
+            
+            int dotIndex = file.getName().indexOf('.');
+            String chatName = file.getName().substring(0, dotIndex);
+            String[] userList = lines.get(0).split(",");
+            Message[] msgHistory = lines.stream()
+                .skip(1)
+                .map(line -> line.split(","))
+                .map(cols -> new Message(
+                    cols[2],
+                    LocalDateTime.parse(cols[0]),
+                    cols[1]
+                ))
+                .toArray(Message[]::new);
+
+            chatNameObjMap.put(chatName, new Chat(userList, msgHistory, chatName));
+
+            // add chat to userChatMap for each user
+            for(String user : userList) {
+                // creates set if DNE, always inserts chatname
+                userChatMap
+                    .computeIfAbsent(user, k -> new HashSet<>())
+                    .add(chatName);
+            }
+        }
+    }
+
+    // TODO change ldt to actual localDateTime
+    public List<Message> getMessages(String accountName, Date ldt) {
+        List<Message> mList = null;
+
+        for(String chatName : userChatMap.get(accountName)) {
+            Chat toCheck = chatNameObjMap.get(chatName);
+            for(Message m : toCheck.getMsgHistory()) {
+                if(m.getTime().compareTo(ldt) != 0) continue;
+                if(m.getAccountName().equals(accountName)) {
+                    if(mList == null) mList = new ArrayList<>();
+                    mList.addLast(m);
                 }
             }
         }
 
-        // get Chats path
-        Path currentRelativePath = Path.of("");
-        String s = currentRelativePath.toAbsolutePath().toString();
-        chats = Path.of(s + "/database/Chats/");
+        return mList;
     }
 
-    public Message getMessage(String accountName, int time) {
+    // TODO get method for adding message to chat obj
+    public void saveMessage(Message msg) throws IOException {
+        Path filePath = Path.of(msg.getChatname() + ".txt");
 
+        Files.write(
+            filePath,
+            (msg.toString() + System.lineSeparator()).getBytes(), // ensure newline
+            StandardOpenOption.APPEND   // append to existing file
+        );    
     }
 
-    public void saveMessage(Message msg) {
-
-    }
-
-    public Chat getChat() {
-
+    public Chat getChat(String chatName) {
+        return chatNameObjMap.get(chatName);
     }
 
     public void addChat(String[] userList, String chatName) throws IOException {
-        // create a new chat
-        Chat chat = new Chat(userList, new Message[0], chatName);
-        // save the chat to the database
-        try {
-            Files.createFile(chats.resolve(chatName + ".txt"));
-        } catch (FileAlreadyExistsException faee) {
-            // alert user that the chat already exists
-            // TODO use uuids instead if duplicate chat names are okay
-            System.out.println("Chat with this name already exists.");
+        Chat toAdd = new Chat(userList, null, chatName);
+        chatNameObjMap.put(chatName, toAdd);
+        
+        // add chat name for each user
+        for(String user : userList) {
+            // creates set if DNE, always inserts chatname
+            userChatMap
+                .computeIfAbsent(user, k -> new HashSet<>())
+                .add(chatName);
         }
     }
 
     public Account getAccount(String name) {
-
+        return acctNameObjMap.get(name);
     }
 }
