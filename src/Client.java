@@ -1,4 +1,5 @@
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Queue;
 
 public class Client {
@@ -40,8 +41,23 @@ public class Client {
 
     }
 
-    private void searchUserList() {
-
+    /**
+     * This takes in a partial name entry from a user search and returns an ArrayList<String>
+     * that has all user's names that contains partialName String.
+     * 
+     * @param partialName
+     * @return ArrayList<String> for all names hat contains partialName
+     */
+    private ArrayList<String> searchUserList(String partialName) {
+    	ArrayList<String> temp = new ArrayList<String>();
+    	
+    	for(String name : this.userList) {
+    		if(name.contains(partialName)) {
+    			temp.add(name);
+    		}
+    	}
+    	
+    	return temp;
     }
 
     public void makeChat() {
