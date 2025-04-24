@@ -7,7 +7,6 @@ public class Message implements Serializable {
 	private LocalDateTime time;
 	private String accountName;
 	private String chatname;
-	private int chatID;
 
 	/**
 	 * Only constructor for Message class
@@ -23,7 +22,6 @@ public class Message implements Serializable {
 		this.time = creationTime;
 		this.accountName = accountName;
 		this.chatname = chatname;
-		this.chatID = chatID;
 	}
 
 	public Message(String string, LocalDateTime localDateTime, String string2) {
@@ -64,14 +62,5 @@ public class Message implements Serializable {
 	 */
 	public String getChatname() {
 		return this.chatname;
-	}
-
-	/**
-	 * For retrieving the integer ID of the Chat this Message was made for.
-	 * 
-	 * @return	The integer for the Chat ID this Message is tied to.
-	 */
-	public int getChatID() {
-		return this.chatID;
 	}
 }
