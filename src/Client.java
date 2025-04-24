@@ -37,14 +37,6 @@ public class Client {
     }
 
     public boolean login(String username, String password) {
-        /*Needs to check if the users inputted information exists within the database
-        First the database checks for the username
-        If the username isn't found, then the loops breaks and an error message is printed to the GUI
-        If the username is found, then the corresponding password is checked to see if it matches'
-        if it doesn't match, then a password error is displayed on the gui
-        once the user information is found, the bool for login returns true.
-        if the password or username is not found, then the bool returns false
-         */
         boolean loginSucceeded = false;
     
         Login newLogin = new Login(username, password);
