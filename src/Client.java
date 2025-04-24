@@ -3,6 +3,7 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Queue;
+import java.io.*;
 
 public class Client {
     private Socket socket;
@@ -35,8 +36,39 @@ public class Client {
 
     }
 
-    public boolean login() {
-
+    public boolean login(String username, String password) {
+        boolean loginSucceeded = false;
+    
+        Login newLogin = new Login(username, password);
+    
+        try (
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+            //Sends login to server
+            out.writeObject(newLogin);
+            out.flush();
+    
+            // Receive response from server
+            Login loginResponse = (Login) in.readObject();
+    
+            //Need line getting a response from server wheter or the login passed.
+            //System.out.println("Server says: " + loginResponse.getText());
+    
+            /* if (response.getStatus() == MessageStatus.SUCCESS) 
+            {
+                System.out.println("Login successful!");
+                loginSucceeded = true;
+            } 
+            else 
+            {
+                System.out.println("Login failed! Please try again.");
+            }
+             */
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    
+        return loginSucceeded;
+    
     }
 
     /**
