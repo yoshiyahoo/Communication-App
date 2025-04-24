@@ -1,6 +1,5 @@
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 //These are text messages that will be passed between the server and client application
 public class Message implements Serializable {
@@ -32,11 +31,12 @@ public class Message implements Serializable {
 	 * @param msg			A string of the user message to be sent over network.
 	 * @param accountName	A String of the name from the current account trying to send Message.
 	 * @param chatname		A name of the Chat the new Message is being made for.
-	 * @param time			A Time that was saved for this Message on creation in Database.
+	 * @param chatID		The ID integer for the given Chat the Message is being made for.
+	 * @param creationTime	A LocalDateTime().now() pass to generate a Message creation time.
 	 */
-	public Message(String msg, String accountName, String chatname, LocalDateTime time) {
+	public Message(String msg, String accountName, String chatname, int chatID, LocalDateTime creationTime) {
 		this.msg = msg;
-		this.time = time;
+		this.time = creationTime;
 		this.accountName = accountName;
 		this.chatname = chatname;
 	}
