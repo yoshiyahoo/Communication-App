@@ -9,7 +9,7 @@ public class Message implements Serializable {
 	private String chatname;
 
 	/**
-	 * Only constructor for Message class
+	 * Constructor for making new user Message.
 	 * 
 	 * @param msg			A string of the user message to be sent over network.
 	 * @param accountName	A String of the name from the current account trying to send Message.
@@ -18,6 +18,22 @@ public class Message implements Serializable {
 	public Message(String msg, String accountName, String chatname) {
 		this.msg = msg;
 		this.time = LocalDateTime.now();
+		this.accountName = accountName;
+		this.chatname = chatname;
+	}
+	
+	/**
+	 * Constructor for making a Message from saved chat logs.
+	 * Should only use in Database.
+	 * 
+	 * @param msg			A string of the user message to be sent over network.
+	 * @param accountName	A String of the name from the current account trying to send Message.
+	 * @param chatname		A name of the Chat the new Message is being made for.
+	 * @param time			A Time that was saved for this Message on creation in Database.
+	 */
+	public Message(String msg, String accountName, String chatname, LocalDateTime time) {
+		this.msg = msg;
+		this.time = time;
 		this.accountName = accountName;
 		this.chatname = chatname;
 	}
