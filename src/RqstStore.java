@@ -1,34 +1,31 @@
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.SynchronousQueue;
 /*
 This will hold all messages incoming from one object and outgoing to another object
  */
 public class RqstStore {
-    private Queue<Message> incoming;
-    private Queue<Message> outgoing;
+    private SynchronousQueue<Message> incoming;
+    private SynchronousQueue<Message> outgoing;
 
     public RqstStore() {
-    	incoming = new LinkedList<>();
-    	outgoing = new LinkedList<>();
+    	incoming = new SynchronousQueue<>();
+    	outgoing = new SynchronousQueue<>();
     }
-
-    public Message getIncoming() {
-    	synchronized (incoming) {
-    		return incoming.poll(); //removes and returns the head of the queue
-    	}
+    //Gets message from incoming queue (blocks until a message is available)
+    public Message getIncoming() throws InterruptedException {
+    	return incoming.take(); //retrieves and removes the head of queue
     }
     
-    //For storing incoming messages
-    public void addToIncoming(Message msg) {
-    	synchronized (incoming) {
-    		incoming.add(msg);
-    	}
+    //Adds message to incoming queue (blocks until a receiver is ready)
+    public void addToIncoming(Message msg) throws InterruptedException {
+    	incoming.put(msg);
     }
-
-    public void addToOutGoing(Message msg) {
-    	synchronized (outgoing) {
-    		outgoing.add(msg);
-    	}
+    //Gets a message from the outgoing queue (blocks until a message is available)
+    public Message getOutgoing() throws InterruptedException {
+    	return outgoing.take(); 
+    }
+    //Adds message to outgoing queue (blocks until a receiver is ready)
+    public void addToOutGoing(Message msg) throws InterruptedException {
+    	outgoing.put(msg);
     }
     
 }
