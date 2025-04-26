@@ -13,7 +13,7 @@ public class Client {
     private String[] userList;
     private GUI display;
     private RqstStore requestStore;
-    private Chat[] chats;
+    private ArrayList<Chat> chats;
 
     public static void main(String[] args) {
     	
@@ -31,9 +31,34 @@ public class Client {
     public void recieveMsg() {
 
     }
+    
+    /**
+     * gets chatList from Client for GUI
+     * 
+     * @return	ArrayList<Chat>
+     */
+    public ArrayList<Chat> getChats() {
+    	return this.chats;
+    }
 
+    //change later, made for testing
     public void display() {
-
+    	this.display = new GUI(this); //do in main
+    	
+    	this.display.loginScreen();
+    	
+    	//probably need to change location
+    	ObjectInputStream objectInputStream;
+		try {
+			objectInputStream = new ObjectInputStream(this.socket.getInputStream());
+			this.getChatFromServer(objectInputStream);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	this.display.mainScreen();
     }
 
     public boolean login(String username, String password) {
@@ -78,7 +103,7 @@ public class Client {
      */
     private void getChatFromServer(ObjectInputStream chatInputStream) {
     	try {
-			this.chats = (Chat[]) chatInputStream.readObject();
+			this.chats = (ArrayList<Chat>) chatInputStream.readObject();
 			
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
@@ -94,13 +119,13 @@ public class Client {
      */
     private ArrayList<String> searchUserList(String partialName) {
     	ArrayList<String> temp = new ArrayList<String>();
-    	
+
     	for(String name : this.userList) {
     		if(name.contains(partialName)) {
     			temp.add(name);
     		}
     	}
-    	
+
     	return temp;
     }
 
