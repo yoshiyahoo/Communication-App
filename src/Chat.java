@@ -3,12 +3,19 @@ import java.util.Arrays;
 import java.util.List;
 /*
 This is a chat that contains users and messages
+The object is meant to be sent over the network
+You can only add messages, you can't remove
  */
-// Needs to implement Serializable?
 public class Chat implements Serializable {
-    private List<Account> users; // can't we make this accounts?
+    private List<Account> users; 
     private List<Message> msgHistory;
     private String chatName;
+    
+    // Additional constructor for creating new chat
+    public Chat(Account[] users, String chatName) {
+    	this.users = Arrays.asList(users);
+    	this.chatName = chatName;
+    }
 
     public Chat(Account[] users, Message[] msgHistory, String chatName) {
     	this.users = Arrays.asList(users);
@@ -24,7 +31,14 @@ public class Chat implements Serializable {
     	this.users.remove(account);
     }
     
-    // Added extra methods
+    public String getChatName() {
+    	return this.chatName;
+    }
+    
+    public Account[] getUsers() {
+    	return (Account[]) this.users.toArray();
+    }
+    
     public void addMessage(Message msg) {
     	msgHistory.add(msg);
     }
