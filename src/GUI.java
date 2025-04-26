@@ -41,7 +41,7 @@ public class GUI {
 					+ "2) switch to chat\n"
 					+ "3) current chat history\n"
 					+ "4) send msg to current chat\n"
-					+ "5) logout/exit"
+					+ "5) logout/exit\n"
 					);
 			
 			try {
@@ -55,16 +55,38 @@ public class GUI {
 					System.out.println("Not made yet");
 					break;
 				case 2:
-					//need a Chat name getter to finish
-					System.out.println("Not made yet");
+					System.out.println("Enter Chatname >>> ");
+					String chatToGoTo = this.scan.nextLine();
+					
+					for(Chat chat : this.client.getChats()) {
+						if(chat.getChatName().equals(chatToGoTo)) {
+							currentChat = chat;
+							break;
+						}
+					}
+					
+					System.out.println("\n=== Switched to " + currentChat.getChatName() + " ===\n");
 					break;
 				case 3:
-					//need to be able to switch to a chat to make
-					System.out.println("Not made yet");
+					System.out.println("\n=== Chat History for " + currentChat.getChatName() + " ===\n");
+					
+					for(Message msg : currentChat.getMsgHistory()) {
+						System.out.println(
+								msg.getAccountName()
+								+ " "
+								+ msg.getTime().getHour()
+								+ ":"
+								+ msg.getTime().getMinute()
+								+ " >>> "
+								+ msg.getMsg()
+						);
+					}
+					
+					System.out.println();
 					break;
 				case 4:
 					//need to be able to switch to a chat to make
-					System.out.println("Not made yet");
+//					System.out.println("Not made yet");
 					break;
 				case 5:
 					//maybe should have a logout method on client and server
