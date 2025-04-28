@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,15 +62,8 @@ public class Database {
             
             int dotIndex = file.getName().indexOf('.');
             String chatName = file.getName().substring(0, dotIndex);
-            
-            // NOTE: imma be lazy and assume that if user is admin
-            // they wouldn't be on list
+
             String[] userList = lines.get(0).split(",");
-            Account[] acctList = Arrays.stream(userList)
-            		.map(userName -> new Account(Role.EMPLOYEE, userName))
-            		.toArray(Account[]::new);
-            
-            
             Message[] msgHistory = lines.stream()
                 .skip(1)
                 .map(line -> line.split(","))
@@ -79,7 +74,7 @@ public class Database {
                 ))
                 .toArray(Message[]::new);
 
-            chatNameObjMap.put(chatName, new Chat(acctList, msgHistory, chatName));
+            chatNameObjMap.put(chatName, new Chat(userList, msgHistory, chatName));
 
             // add chat to userChatMap for each user
             for(String user : userList) {

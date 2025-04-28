@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 //These are text messages that will be passed between the server and client application
 public class Message implements Serializable {
