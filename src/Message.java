@@ -8,21 +8,6 @@ public class Message implements Serializable {
 	private String accountName;
 	private String chatname;
 
-	/**
-	 * Constructor for making new user Message.
-	 * 
-	 * @param msg			A string of the user message to be sent over network.
-	 * @param accountName	A String of the name from the current account trying to send Message.
-	 * @param chatname		A name of the Chat the new Message is being made for.
-	 * @param chatID		The ID integer for the given Chat the Message is being made for.
-	 * @param creationTime	A LocalDateTime().now() pass to generate a Message creation time.
-	 */
-	public Message(String msg, String accountName, String chatname, int chatID, LocalDateTime creationTime) {
-		this.msg = msg;
-		this.time = creationTime;
-		this.accountName = accountName;
-		this.chatname = chatname;
-	}
 	
 	/**
 	 * Constructor for making a Message from saved chat logs.

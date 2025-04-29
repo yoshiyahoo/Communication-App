@@ -1,7 +1,5 @@
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,7 +85,7 @@ public class Database {
                 ))
                 .toArray(Message[]::new);
 
-            chatNameObjMap.put(chatName, new Chat(userList, msgHistory, chatName));
+            chatNameObjMap.put(chatName, new Chat(acctList, msgHistory, chatName));
 
             // add chat to userChatMap for each user
             for(String user : userList) {
