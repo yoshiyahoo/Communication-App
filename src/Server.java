@@ -22,7 +22,7 @@ public class Server {
     		Socket client = acceptor.accept();
     		
     		// TODO Josiah can change da interface
-    		Thread clientThread = new Thread(new BackgroundHandlerServer());
+    		Thread clientThread = new Thread(new BackgroundHandlerServer(client));
     		clientThread.start();
     	}
     }
@@ -71,12 +71,37 @@ public class Server {
     }
 
     private static class BackgroundHandlerServer implements Runnable {
+        private Chat currentChat;
+        private ObjectOutputStream out;
+        private ObjectInputStream in;
+        private Socket conn;
 
+        public BackgroundHandlerServer(Socket conn) {
+            this.conn = conn;
+        }
         @Override
         public void run() {
+            // Gather the output stream information
+            try {
+                this.out = new ObjectOutputStream(conn.getOutputStream());
+                this.in = new ObjectInputStream(conn.getInputStream());
+            } catch (IOException e) {
+                // Close the thread and stop handling this client data
+                return;
+            }
+
+            // Process the login
+            try {
+                Login login = (Login) this.in.readObject();
+                System.out.println(login);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             // Send chats to the Client
 
-            // loop to handle switching chats
+            // loop to handle switching chats/sending messages/stuff like that
         }
     }
 
