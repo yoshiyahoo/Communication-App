@@ -1,25 +1,21 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Queue;
-import java.io.*;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+
 
 public class LoginTest 
 {
     @Test
-    private void Login()
-    {
-        String testUserName = "Yo Mama";
-        String testPassword = "Password";
-        Login newLogin = new Login(testUserName, testPassword);
+    public void LoginSetterandGetterTest() {
+        String testUsername = "Yo Mama";
+        String testPassword = "password";
         
-        String username = newLogin.getUsername();
-        String password = newLogin.getPassword();
-
-        Assert.assertEquals(testUserName, username, "Usernames match");
-        Assert.assertEquals(testPassword, password, "Passwords match");
+        Login login = new Login(testUsername, testPassword);
+        
+        assertEquals("Username should match", login.getUsername(), testUsername);
+        assertEquals("Passwords should match", login.getPassword(), testPassword);
     }
 
 }
