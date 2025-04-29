@@ -37,13 +37,18 @@ public class Database {
     /**
      * Constructor for Database class
      * loads users and chats from files
+     * Users.txt MUST exist
      * 
      * @throws IOException 
      */
     public Database() throws IOException {
-        // get users into acct map
-        {
-            List<String> lines = Files.readAllLines(Paths.get("./Database/Users.txt"));
+    	this.acctNameObjMap = new HashMap<>();
+        this.chatNameObjMap = new HashMap<>();
+        this.userChatMap = new HashMap<>();
+    	
+    	// get users into acct map
+        {        			
+            List<String> lines = Files.readAllLines(Paths.get("./src/Database/Users.txt"));
             for(String line : lines) {
                 String[] cols = line.split(",");
                 Role r = (cols[0].equals("admin"))? Role.ADMINISTRATOR : Role.EMPLOYEE;
@@ -64,13 +69,21 @@ public class Database {
             String chatName = file.getName().substring(0, dotIndex);
 
             String[] userList = lines.get(0).split(",");
+            Account[] acctList = Arrays.stream(userList)
+            		.map(userName -> new Account(Role.EMPLOYEE, userName))
+            		.toArray(Account[]::new);
+            
+            
+            // TODO do we need a chat id anymore?
             Message[] msgHistory = lines.stream()
                 .skip(1)
                 .map(line -> line.split(","))
                 .map(cols -> new Message(
-                    cols[2],
-                    LocalDateTime.parse(cols[0]),
-                    cols[1]
+                		cols[2], 
+                		cols[1], 
+                		chatName, 
+                		0, 
+                		LocalDateTime.parse(cols[0])
                 ))
                 .toArray(Message[]::new);
 
@@ -111,7 +124,6 @@ public class Database {
         return mList;
     }
 
-    // TODO get method for adding message to chat obj
     /**
      * Save new message to chat obj msgHistory
      * and to chat log file
@@ -120,13 +132,16 @@ public class Database {
      * @throws IOException
      */
     public void saveMessage(Message msg) throws IOException {
-        Path filePath = Path.of(msg.getChatname() + ".txt");
+        Path filePath = Path.of("./src/Database/Chats/" + msg.getChatname() + ".txt");
 
         Files.write(
             filePath,
             (msg.toString() + System.lineSeparator()).getBytes(), // ensure newline
             StandardOpenOption.APPEND   // append to existing file
-        );    
+        ); 
+        
+       Chat c = chatNameObjMap.get(msg.getChatname());
+       c.addMessage(msg);
     }
 
     /**
@@ -151,7 +166,15 @@ public class Database {
         		.map(userName -> new Account(Role.EMPLOYEE, userName))
         		.toArray(Account[]::new);
     	
-    	Chat toAdd = new Chat(acctList, null, chatName);
+    	// Save to local files
+        Path filePath = Path.of("./src/Database/Chats/" + chatName + ".txt");
+        Files.write(
+    	    filePath,
+    	    (String.join(",", userList) + System.lineSeparator()).getBytes(),  // add newline
+    	    StandardOpenOption.CREATE
+    	);
+        
+        Chat toAdd = new Chat(acctList, new Message[0], chatName);
         chatNameObjMap.put(chatName, toAdd);
         
         // add chat name for each user

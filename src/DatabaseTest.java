@@ -1,69 +1,88 @@
 import static org.junit.Assert.*;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 public class DatabaseTest {
-
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    private File usersFile;
-    private File chatsFolder;
+    private Database db;
+    private LocalDateTime testTime;
 
     @Before
     public void setUp() throws IOException {
-        File dbFolder = tempFolder.newFolder("Database");
-        usersFile = new File(dbFolder, "Users.txt");
+        // Setup temporary Users.txt
+        Path usersPath = Paths.get("./src/Database/Users.txt");
+        Files.createDirectories(usersPath.getParent());
+        Files.write(usersPath, "employee,John\nadmin,Alice".getBytes());
 
-        try (FileWriter writer = new FileWriter(usersFile)) {
-            writer.write("employee,Alice\n");
-            writer.write("employee,Bob\n");
+        db = new Database();
+
+        // Setup temporary Chats directory and a sample chat file;
+        testTime = LocalDateTime.now();
+        String[] ul = {"John", "Alice"};
+        db.addChat(ul, "General");
+        Message m = new Message("Hello everyone!", "John", "General", 0, testTime);
+        db.saveMessage(m);
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        // Cleanup created files/folders
+        Path dbPath = Paths.get("./Database");
+        if (Files.exists(dbPath)) {
+            Files.walk(dbPath)
+                 .sorted((a, b) -> b.compareTo(a)) // delete children first
+                 .forEach(path -> {
+                     try { Files.delete(path); } catch (IOException e) { /* ignore */ }
+                 });
         }
-
-        chatsFolder = new File(dbFolder, "Chats");
-        chatsFolder.mkdir();
-
-        File chatFile = new File(chatsFolder, "testchat.txt");
-        try (FileWriter writer = new FileWriter(chatFile)) {
-            writer.write("Alice,Bob\n");
-            writer.write("2024-01-01T10:00,Alice,Hello\n");
-            writer.write("2024-01-01T10:01,Bob,Hi\n");
-        }
-
-        System.setProperty("user.dir", tempFolder.getRoot().getAbsolutePath());
     }
 
     @Test
-    public void testDatabaseInitialization() throws IOException {
-        Database db = new Database();
+    public void testGetAccount() {
+        Account account = db.getAccount("John");
+        assertNotNull(account);
+        assertEquals("John", account.getName());
+    }
 
-        Account alice = db.getAccount("Alice");
-        assertNotNull(alice);
-        assertEquals("Alice", alice.getName());
-
-        Chat chat = db.getChat("testchat");
+    @Test
+    public void testGetChat() {
+        Chat chat = db.getChat("General");
         assertNotNull(chat);
-        assertEquals("testchat", chat.getMsgHistory()[0].getChatname()));
+        assertEquals("General", chat.getChatName());
     }
 
     @Test
-    public void testGetMessages() throws IOException {
-        Database db = new Database();
-        LocalDateTime ldt = LocalDateTime.parse("2024-01-01T10:00");
-        List<Message> msgs = db.getMessages("Alice", ldt);
-
-        assertNotNull(msgs);
-        assertEquals(1, msgs.size());
-        assertEquals("Hello", msgs.get(0).getMsg());
+    public void testGetMessages() {
+        List<Message> messages = db.getMessages("John", testTime);
+        assertNotNull(messages);
+        assertFalse(messages.isEmpty());
+        assertEquals("John", messages.get(0).getAccountName());
     }
 
-    // Add more tests for saveMessage(), addChat(), etc.
+    @Test
+    public void testAddChat() throws IOException {
+        String[] users = {"John", "Alice"};
+        db.addChat(users, "NewChat");
+        Chat chat = db.getChat("NewChat");
+        assertNotNull(chat);
+        assertEquals("NewChat", chat.getChatName());
+    }
 
+    @Test
+    public void testSaveMessage() throws IOException {
+        Message msg = new Message("This is a test", "John", "General", 0, LocalDateTime.now());
+
+        db.saveMessage(msg);
+
+        // Check if file was updated (very basic check)
+        Path chatFile = Paths.get("./src/Database/Chats/General.txt");
+        String content = new String(Files.readAllBytes(chatFile));
+        assertTrue(content.contains("This is a test"));
+    }
 }

@@ -80,4 +80,13 @@ public class Message implements Serializable {
 	public String getChatname() {
 		return this.chatname;
 	}
+	
+	public String toString() {
+		String ret = this.chatname;
+		ret += "," + this.time.toString();
+		ret += "," + this.accountName;
+		ret += "," + this.msg;
+		
+		return ret;
+	}
 }
