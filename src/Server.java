@@ -1,12 +1,12 @@
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
-    // wouldn't we want the clients to be searchable via a hashmap?
-    private Socket[] clients;
+    private ConcurrentHashMap<String, Socket> clients;
     private Database data;
     private ServerSocket server;
-    private Message msg; // why do we need this?
     private RqstStore requestStore;
 
     public static void main(String[] args) {
@@ -62,9 +62,12 @@ public class Server {
     }
 
     private static class BackgroundHandlerServer implements Runnable {
+
         @Override
         public void run() {
+            // Send chats to the Client
 
+            // loop to handle switching chats
         }
     }
 }
