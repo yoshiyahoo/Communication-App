@@ -14,13 +14,8 @@ public class Client {
     private String[] userList;
     private GUI display;
     private RqstStore requestStore;
-<<<<<<< Updated upstream
     private ArrayList<Chat> chats;
 
-=======
-    private Chat[] chats;
-   
->>>>>>> Stashed changes
     public static void main(String[] args) {
     	
     }
