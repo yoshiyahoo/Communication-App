@@ -8,6 +8,7 @@ public class Message implements Serializable {
 	private String accountName;
 	private String chatname;
 
+	
 	/**
 	 * Constructor for making new user Message.
 	 * 
@@ -38,7 +39,7 @@ public class Message implements Serializable {
 		this.chatname = chatname;
 	}
 
-	/**
+    /**
 	 * For retrieving the message string from this Message Object.
 	 * 
 	 * @return	The message string from this Object.
@@ -72,5 +73,19 @@ public class Message implements Serializable {
 	 */
 	public String getChatname() {
 		return this.chatname;
+	}
+	
+	/**
+	 * Overriding the toString for easy entry into chatlogs
+	 * 
+	 * @return Returns string in format: [chatName],[time],[accountName],[message]
+	 */
+	public String toString() {
+		String ret = this.chatname;
+		ret += "," + this.time.toString();
+		ret += "," + this.accountName;
+		ret += "," + this.msg;
+		
+		return ret;
 	}
 }

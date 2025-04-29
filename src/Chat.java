@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 /*
@@ -13,13 +14,13 @@ public class Chat implements Serializable {
     
     // Additional constructor for creating new chat
     public Chat(Account[] users, String chatName) {
-    	this.users = Arrays.asList(users);
+    	this.users = new ArrayList<>(Arrays.asList(users));
     	this.chatName = chatName;
     }
 
     public Chat(Account[] users, Message[] msgHistory, String chatName) {
-    	this.users = Arrays.asList(users);
-    	this.msgHistory = Arrays.asList(msgHistory);
+    	this.users = new ArrayList<>(Arrays.asList(users));
+    	this.msgHistory = new ArrayList<>(Arrays.asList(msgHistory));
     	this.chatName = chatName;
     }
 
@@ -44,6 +45,6 @@ public class Chat implements Serializable {
     }
 
     public Message[] getMsgHistory() {
-    	return (Message[]) this.msgHistory.toArray();
+    	return this.msgHistory.toArray(new Message[0]);
     }
 }
