@@ -13,7 +13,7 @@ import java.util.List;
 
 /*
  * User.txt schema
- * ROLE,NAME
+ * ROLE,NAME,PASSWORD
  * 
  * Chat folder schema
  * filename=[chatname].txt
@@ -50,7 +50,7 @@ public class Database {
             for(String line : lines) {
                 String[] cols = line.split(",");
                 Role r = (cols[0].equals("admin"))? Role.ADMINISTRATOR : Role.EMPLOYEE;
-                acctNameObjMap.put(cols[1], new Account(r, cols[1]));
+                acctNameObjMap.put(cols[1], new Account(r, cols[1], cols[2]));
             }
         }
 
@@ -68,7 +68,7 @@ public class Database {
 
             String[] userList = lines.get(0).split(",");
             Account[] acctList = Arrays.stream(userList)
-            		.map(userName -> new Account(Role.EMPLOYEE, userName))
+            		.map(userName -> acctNameObjMap.get(userName))
             		.toArray(Account[]::new);
             
             
@@ -80,7 +80,6 @@ public class Database {
                 		cols[2], 
                 		cols[1], 
                 		chatName, 
-                		0, 
                 		LocalDateTime.parse(cols[0])
                 ))
                 .toArray(Message[]::new);
@@ -161,7 +160,7 @@ public class Database {
      */
     public void addChat(String[] userList, String chatName) throws IOException {
         Account[] acctList = Arrays.stream(userList)
-        		.map(userName -> new Account(Role.EMPLOYEE, userName))
+        		.map(userName -> acctNameObjMap.get(userName))
         		.toArray(Account[]::new);
     	
     	// Save to local files

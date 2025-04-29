@@ -12,8 +12,6 @@ public class Chat implements Serializable {
     private List<Message> msgHistory;
     private String chatName;
     
-    //TODO tell the guy that made ts to make an arraylist
-    //TODO for mutability
     // Additional constructor for creating new chat
     public Chat(Account[] users, String chatName) {
     	this.users = new ArrayList<>(Arrays.asList(users));
@@ -46,7 +44,6 @@ public class Chat implements Serializable {
     	msgHistory.add(msg);
     }
 
-    // TODO tell josiah abt this
     public Message[] getMsgHistory() {
     	return this.msgHistory.toArray(new Message[0]);
     }

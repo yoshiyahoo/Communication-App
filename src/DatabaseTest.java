@@ -18,7 +18,7 @@ public class DatabaseTest {
         // Setup temporary Users.txt
         Path usersPath = Paths.get("./src/Database/Users.txt");
         Files.createDirectories(usersPath.getParent());
-        Files.write(usersPath, "employee,John\nadmin,Alice".getBytes());
+        Files.write(usersPath, "employee,John,burger\nadmin,Alice,fry".getBytes());
 
         db = new Database();
 
@@ -26,7 +26,7 @@ public class DatabaseTest {
         testTime = LocalDateTime.now();
         String[] ul = {"John", "Alice"};
         db.addChat(ul, "General");
-        Message m = new Message("Hello everyone!", "John", "General", 0, testTime);
+        Message m = new Message("Hello everyone!", "John", "General", testTime);
         db.saveMessage(m);
     }
 
@@ -89,7 +89,7 @@ public class DatabaseTest {
 
     @Test
     public void testSaveMessage() throws IOException {
-        Message msg = new Message("This is a test", "John", "General", 0, LocalDateTime.now());
+        Message msg = new Message("This is a test", "John", "General", LocalDateTime.now());
 
         db.saveMessage(msg);
 
