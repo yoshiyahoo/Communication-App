@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -6,69 +7,67 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
     // wouldn't we want the clients to be searchable via a hashmap?
-    private ConcurrentHashMap<String, Obj> clients = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ClientStream> clients;
     private Database data;
     private ServerSocket server;
     private Message msg; // why do we need this?
     private RqstStore requestStore;
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws IOException {
+    	/*
+    	 * start accepting sock
+    	 * on each accept, spawn thread, run client handler
+    	 */
+    	ServerSocket acceptor = new ServerSocket(42069);
+    	
+    	while(true) {
+    		Socket client = acceptor.accept();
+    		
+    		// TODO Josiah can change da interface
+    		Thread clientThread = new Thread(new BackgroundHandlerServer());
+    		clientThread.start();
+    	}
     }
 
-    // me
     private void initialStartUp() {
 
     }
 
-    // me
-    private boolean loginHandling() {
+    private boolean loginHandling(Login login) {
+    	// get account info from db
+    	Account acct = data.getAccount(login.getPassword());
+    	
+    	return acct != null && login.getPassword().equals(acct.getPassword());
+    }
+
+    private void sendMsgHistory(String userName, String chatName) {
+    	
+    }
+    
+    private void sendUserList() {
+
+    }
+    
+    private void sendChat() {
 
     }
 
-    // What specifically do these following 3 methods send and to what?
-    // which message history?
-    // me
-    private void sendMsgHistory() {
+    private void logoutHandler() {
 
     }
 
-    // which chat?
-    // me
-    private void sendChats(String clientName) {
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        data.getChat();
-    }
-
-    private void logoutHandler(String clientName) {
-        ServerSocket toClose = clients.remove(clientName);
-        if (toClose != null) {
-            try {
-                toClose.close();
-            } catch (Exception e) {
-                System.err.println("Failed to close connection for client: " + clientName);
-            }
-        }
-    }
-
-    // wouldn't we want more than just one client?
     private void handleClients(Socket client) {
 
     }
 
-    // weren't we not gonna do this part?
     private void handleClientOfflineMsgQ() {
 
     }
 
-    // from which chat?
-    // me
     public Message getDatabaseMessages(Socket client) {
 
     }
 
-    // weren't we not gonna do this part?
-    // me
     private void checkAndSendOfflineMsg(Socket client) {
 
     }
