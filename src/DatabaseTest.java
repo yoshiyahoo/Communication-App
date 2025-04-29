@@ -32,16 +32,29 @@ public class DatabaseTest {
 
     @After
     public void tearDown() throws IOException {
-        // Cleanup created files/folders
-        Path dbPath = Paths.get("./Database");
-        if (Files.exists(dbPath)) {
-            Files.walk(dbPath)
-                 .sorted((a, b) -> b.compareTo(a)) // delete children first
+        // Delete Users.txt
+        Path usersFile = Paths.get("./src/Database/Users.txt");
+        if (Files.exists(usersFile)) {
+            Files.delete(usersFile);
+        }
+
+        // Delete all files inside Chats/
+        Path chatsDir = Paths.get("./src/Database/Chats/");
+        if (Files.exists(chatsDir)) {
+            Files.walk(chatsDir)
+                 .filter(Files::isRegularFile) // Only delete files, not folders
                  .forEach(path -> {
-                     try { Files.delete(path); } catch (IOException e) { /* ignore */ }
+                     try {
+                         Files.delete(path);
+                     } catch (IOException e) {
+                         // Optionally print/log error
+                         System.err.println("Failed to delete " + path + ": " + e.getMessage());
+                     }
                  });
         }
     }
+
+
 
     @Test
     public void testGetAccount() {
