@@ -104,8 +104,20 @@ public class Client {
     	return temp;
     }
 
-    public void makeChat() {
+     public void makeChat() {
+        String testName;
+        Chat newChat = Chat(account, testName);
+        try (
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
+            // Receive response from server
+            Database dataBase = (Database) in.readObject();
+            dataBase.addChat(newChat);
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
 
