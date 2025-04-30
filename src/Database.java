@@ -77,10 +77,10 @@ public class Database {
                 .skip(1)
                 .map(line -> line.split(","))
                 .map(cols -> new Message(
+                		cols[3], 
                 		cols[2], 
-                		cols[1], 
                 		chatName, 
-                		LocalDateTime.parse(cols[0])
+                		LocalDateTime.parse(cols[1])
                 ))
                 .toArray(Message[]::new);
 

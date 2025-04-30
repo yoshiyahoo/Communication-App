@@ -164,38 +164,4 @@ public class Server {
             // loop to handle switching chats/sending messages/stuff like that
         }
     }
-
-    private static class ClientStream {
-        private Socket socket;
-        private ObjectOutputStream outputStream;
-        private ObjectInputStream inputStream;
-
-        public ClientStream(Socket socket, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
-            this.socket = socket;
-            this.outputStream = outputStream;
-            this.inputStream = inputStream;
-        }
-
-        public Socket getSocket() {
-            return socket;
-        }
-
-        public ObjectOutputStream getOutputStream() {
-            return outputStream;
-        }
-
-        public ObjectInputStream getInputStream() {
-            return inputStream;
-        }
-
-        public void close() {
-            try {
-                outputStream.close();
-                inputStream.close();
-                socket.close();
-            } catch (Exception e) {
-                System.err.println("Failed to close streams: " + e.getMessage());
-            }
-        }
-    }
 }

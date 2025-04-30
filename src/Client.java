@@ -2,12 +2,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.io.*;
 
 public class Client {
-    private Socket socket;
-    private Queue<Message> offlineQ; // need to rename QueueForOfflineMessages in Design
+    private static Socket socket;
+    private Queue<Message> offlineQ = new LinkedList<>(); // need to rename QueueForOfflineMessages in Design
     private Account account;
     private Message msg; // why do we need a message here?
     private String[] userList;
@@ -16,20 +17,45 @@ public class Client {
     private ArrayList<Chat> chats;
 
     public static void main(String[] args) {
-
+    	//remove later
+    	System.out.println("Running Client");
+    	
+    	try {
+    		socket = new Socket("134.154.68.196", 42069);
+    		
+    		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+    		
+			out.writeObject(new Login(
+					"test",
+					"password"
+			));
+			
+			Thread.sleep(5000);
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+    	
+    	System.out.println("Done");
     }
 
     // why is this method needed?
-    public static Queue<Message> getMessageQueue() {
-        return (Queue<Message>) TODO.todo();
-    }
+    //public Queue<Message> getMessageQueue() {
+    //	return offlineQ;
+    //}
 
-    public void sendMsg() {
-        TODO.todo();
+    public void sendMsg(Message msg) {
+    	try {
+    		requestStore.addToOutGoing(msg); //hand off to outgoing queue
+    	} catch(InterruptedException e) {
+    		System.out.println("Error while sending message: " + e.getMessage());
+    		Thread.currentThread().interrupt();
+    	}
     }
-
-    public void recieveMsg() {
-        TODO.todo();
+    
+    public void recieveMsg(Message msg) {
+    	//store message for later
+    	//putting something into the queue
+    	//System.out.println("[" + msg.getTime() + "] " + msg.getAccountName() + " in " + msg.getChatname() + ": " + msg.getMsg());
     }
 
     /**
@@ -71,10 +97,9 @@ public class Client {
             //Sends login to server
             out.writeObject(newLogin);
             out.flush();
-    
+            
             // Receive response from server
             Login loginResponse = (Login) in.readObject();
-    
             //Need line getting a response from server wheter or the login passed.
             //System.out.println("Server says: " + loginResponse.getText());
     

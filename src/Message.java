@@ -39,10 +39,6 @@ public class Message implements Serializable {
 		this.chatname = chatname;
 	}
 
-	public Message(String string, LocalDateTime localDateTime, String string2) {
-        //TODO Auto-generated constructor stub
-    }
-
     /**
 	 * For retrieving the message string from this Message Object.
 	 * 
@@ -79,6 +75,11 @@ public class Message implements Serializable {
 		return this.chatname;
 	}
 	
+	/**
+	 * Overriding the toString for easy entry into chatlogs
+	 * 
+	 * @return Returns string in format: [chatName],[time],[accountName],[message]
+	 */
 	public String toString() {
 		String ret = this.chatname;
 		ret += "," + this.time.toString();
