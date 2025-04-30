@@ -6,20 +6,28 @@ import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
-    private ConcurrentHashMap<String, Socket> clients;
-    private Database data;
-    private ServerSocket server;
-    private RqstStore requestStore;
+	// NOTE client gets added in bg handler after login success
+    private static ConcurrentHashMap<String, BackgroundHandlerServer> clients;
+    private static Database data;
+    private static ServerSocket server;
+    private static RqstStore requestStore;
 
+    
+    /**
+     * Init server
+     * start listening for clients
+     * on host IP, port 42069
+     * 
+     * @param args 
+     * @throws IOException
+     */
     public static void main(String[] args) throws IOException {
-    	/*
-    	 * start accepting sock
-    	 * on each accept, spawn thread, run client handler
-    	 */
-    	ServerSocket acceptor = new ServerSocket(42069);
+    	clients = new ConcurrentHashMap<>();
+    	data = new Database();
+    	server = new ServerSocket(42069);
     	
     	while(true) {
-    		Socket client = acceptor.accept();
+    		Socket client = server.accept();
     		
     		// TODO Josiah can change da interface
     		Thread clientThread = new Thread(new BackgroundHandlerServer(client));
@@ -27,10 +35,30 @@ public class Server {
     	}
     }
 
+    // TODO this is all being done in main, might move here as things grow
     private void initialStartUp() {
+        // 1. Open a server socket on a specific port
+        // create ServerSocket listeningSocket on PORT
 
+        // 2. Print startup message
+        // print "Server started on port " + PORT
+
+        // 3. (Optional) Initialize data structures for clients
+        // create List or Map to track connected clients
+
+        // 4. (Optional) Set up a thread pool (for handling clients)
+        // initialize ExecutorService or thread pool
+
+        // 5. (Optional) Load server config or resources
+        // load config file if any
     }
 
+    /**
+     * Compare a login obj with login info on the database 
+     * 
+     * @param login Login object with username and password that needs verification
+     * @return True if login is in database, False otherwise
+     */
     private boolean loginHandling(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getPassword());
@@ -38,18 +66,43 @@ public class Server {
     	return acct != null && login.getPassword().equals(acct.getPassword());
     }
 
-    private void sendMsgHistory(String userName, String chatName) {
-    	
+    /**
+     * Send message history of a chat to client as a Message[]
+     * 
+     * @param clientStream Stream to send history to
+     * @param chatName Desired chat
+     * @throws IOException 
+     */
+    private void sendMsgHistory(ObjectOutputStream clientStream, String chatName) throws IOException {
+    	Message[] toSend = data.getChat(chatName).getMsgHistory();
+    	clientStream.writeObject(toSend);
     }
     
-    private void sendUserList() {
-
+    /**
+     * Send the user list of a chat to client as an Account[]
+     * 
+     * @param clientStream Stream to send user list to
+     * @param chatName Desired chat
+     * @throws IOException 
+     */
+    private void sendUserList(ObjectOutputStream clientStream, String chatName) throws IOException {
+    	Account[] toSend = data.getChat(chatName).getUsers();
+    	clientStream.writeObject(toSend);
     }
     
-    private void sendChat() {
-
+    /**
+     * Send a chat to client as an Chat obj
+     * 
+     * @param clientStream Stream to send chat to
+     * @param chatName Desired chat
+     * @throws IOException 
+     */
+    private void sendChat(ObjectOutputStream clientStream, String chatName) throws IOException {
+    	Chat toSend = data.getChat(chatName);
+    	clientStream.writeObject(toSend);
     }
 
+    // TODO close client connections, remove client from map, end thread
     private void logoutHandler() {
 
     }
