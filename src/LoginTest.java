@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.Queue;
 import java.io.*;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LoginTest 
 {
     @Test
-    private void Login()
+    public void Login()
     {
         String testUserName = "Yo Mama";
         String testPassword = "Password";
@@ -18,8 +19,8 @@ public class LoginTest
         String username = newLogin.getUsername();
         String password = newLogin.getPassword();
 
-        Assert.assertEquals(testUserName, username, "Usernames match");
-        Assert.assertEquals(testPassword, password, "Passwords match");
+        assertEquals(testUserName, "Usernames match", username);
+        assertEquals(testPassword, "Passwords match", password);
     }
 
 }
