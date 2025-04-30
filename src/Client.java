@@ -16,22 +16,22 @@ public class Client {
     private ArrayList<Chat> chats;
 
     public static void main(String[] args) {
-    	
+
     }
 
     // why is this method needed?
-    public Queue<Message> getMessageQueue() {
-
+    public static Queue<Message> getMessageQueue() {
+        return (Queue<Message>) TODO.todo();
     }
 
     public void sendMsg() {
-
+        TODO.todo();
     }
 
     public void recieveMsg() {
-
+        TODO.todo();
     }
-    
+
     /**
      * gets chatList from Client for GUI
      * 
@@ -130,7 +130,7 @@ public class Client {
     }
 
     public void makeChat() {
-
+        TODO.todo();
     }
 
 
@@ -138,7 +138,7 @@ public class Client {
 
         @Override
         public void run() {
-
+            TODO.todo();
         }
     }
 }

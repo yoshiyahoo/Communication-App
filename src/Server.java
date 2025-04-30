@@ -11,8 +11,8 @@ public class Server {
     private static Database data;
     private static ServerSocket server;
     private static RqstStore requestStore;
+    private static final int PORT = 42069;
 
-    
     /**
      * Init server
      * start listening for clients
@@ -24,12 +24,10 @@ public class Server {
     public static void main(String[] args) throws IOException {
     	clients = new ConcurrentHashMap<>();
     	data = new Database();
-    	server = new ServerSocket(42069);
+    	server = new ServerSocket(PORT);
     	
     	while(true) {
     		Socket client = server.accept();
-    		
-    		// TODO Josiah can change da interface
     		Thread clientThread = new Thread(new BackgroundHandlerServer(client));
     		clientThread.start();
     	}
@@ -62,7 +60,7 @@ public class Server {
     private boolean loginHandling(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getPassword());
-    	
+
     	return acct != null && login.getPassword().equals(acct.getPassword());
     }
 
@@ -102,28 +100,27 @@ public class Server {
     	clientStream.writeObject(toSend);
     }
 
-    // TODO close client connections, remove client from map, end thread
     private void logoutHandler() {
-
+        TODO.todo("close client connections, remove client from map, end thread");
     }
 
-    private void handleClients(Socket client) {
-
+    protected void handleClients(Socket client) {
+        TODO.todo();
     }
 
-    private void handleClientOfflineMsgQ() {
-
+    protected void handleClientOfflineMsgQ() {
+        TODO.todo();
     }
 
     public Message getDatabaseMessages(Socket client) {
-
+        return (Message) TODO.todo();
     }
 
-    private void checkAndSendOfflineMsg(Socket client) {
-
+    protected void checkAndSendOfflineMsg(Socket client) {
+        TODO.todo();
     }
 
-    private static class BackgroundHandlerServer implements Runnable {
+    private static class BackgroundHandlerServer extends Server implements Runnable {
         private Chat currentChat;
         private ObjectOutputStream out;
         private ObjectInputStream in;
@@ -144,13 +141,23 @@ public class Server {
             }
 
             // Process the login
+            Login login;
             try {
-                Login login = (Login) this.in.readObject();
+                login = (Login) this.in.readObject();
                 System.out.println(login);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
+                // If there is any exception to the protocol, drop the client
+            } catch (IOException | ClassNotFoundException e) {
+                return;
+            }
+
+            if (!super.loginHandling(login)) {
+                // close the thread
+                // The client will infer that it logged in or not
+                try {
+                    out.writeObject(login);
+                } catch (IOException e) {
+                    return;
+                }
             }
             // Send chats to the Client
 
