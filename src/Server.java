@@ -1,3 +1,4 @@
+import java.util.List;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,15 +18,11 @@ public class Server {
      * Init server
      * start listening for clients
      * on host IP, port 42069
-     * 
-     * @param args 
+     * @param args
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-    	clients = new ConcurrentHashMap<>();
-    	data = new Database();
-    	server = new ServerSocket(PORT);
-    	
+    	initialStartUp();
     	while(true) {
     		Socket client = server.accept();
     		Thread clientThread = new Thread(new BackgroundHandlerServer(client));
@@ -33,16 +30,19 @@ public class Server {
     	}
     }
 
-    // TODO this is all being done in main, might move here as things grow
-    private void initialStartUp() {
+    private static void initialStartUp() throws IOException {
         // 1. Open a server socket on a specific port
         // create ServerSocket listeningSocket on PORT
+        server = new ServerSocket(PORT);
 
         // 2. Print startup message
         // print "Server started on port " + PORT
+        System.out.println("Server started on Port: " + PORT);
 
         // 3. (Optional) Initialize data structures for clients
         // create List or Map to track connected clients
+        clients = new ConcurrentHashMap<>();
+        data = new Database();
 
         // 4. (Optional) Set up a thread pool (for handling clients)
         // initialize ExecutorService or thread pool
@@ -59,8 +59,7 @@ public class Server {
      */
     private boolean loginHandling(Login login) {
     	// get account info from db
-    	Account acct = data.getAccount(login.getPassword());
-
+    	Account acct = data.getAccount(login.getUsername());
     	return acct != null && login.getPassword().equals(acct.getPassword());
     }
 
@@ -150,18 +149,48 @@ public class Server {
                 return;
             }
 
+            // The client will infer that it logged in or not
             if (!super.loginHandling(login)) {
                 // close the thread
-                // The client will infer that it logged in or not
                 try {
+                    System.out.println("Login Failed");
                     out.writeObject(login);
+                } catch (IOException e) {
+                    // Doesn't matter
+                }
+                return;
+            }
+
+            // Send chats to the Client
+            List<Chat> chats = data.getChats(login.getUsername());
+
+            try {
+                this.out.writeObject(chats);
+            } catch (IOException e) {
+                // close the thread
+                return;
+            }
+
+            // loop to handle switching chats/sending messages/stuff like that
+            while (true) {
+                Message msg;
+                try {
+                    msg = (Message) this.in.readObject();
+                } catch (IOException e) {
+                    return;
+                } catch (ClassNotFoundException e) {
+                    // The client is silly?
+                    TODO.todo("Tell client how to handle responses");
+                    return;
+                }
+
+                // Write the message into the database
+                try {
+                    data.saveMessage(msg);
                 } catch (IOException e) {
                     return;
                 }
             }
-            // Send chats to the Client
-
-            // loop to handle switching chats/sending messages/stuff like that
         }
     }
 }
