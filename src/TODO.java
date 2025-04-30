@@ -15,13 +15,13 @@ public class TODO {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         // The stacktrace at element 2 is the method that called this one
         StackTraceElement caller = stack[2];
-        System.err.println("Implement " + caller.getClassName() + ":" + caller.getMethodName() + ":" + caller.getLineNumber());
+        System.err.println("TODO! Implement " + caller.getClassName() + ":" + caller.getMethodName() + ":" + caller.getLineNumber());
         System.exit(-1);
         return null;
     }
 
     /**
-     * This method uses a custom message as well to clarify the thing to be done
+     * This method allows a custom message to clarify the thing to be done
      * @return null
      * Retuning null tricks the java compiler to compile your code
      */
@@ -29,7 +29,8 @@ public class TODO {
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         // The stacktrace at element 2 is the method that called this one
         StackTraceElement caller = stack[2];
-        System.err.println(msg + caller.getClassName() + ":" + caller.getMethodName() + ":" + caller.getLineNumber());
+        System.err.println("TODO! " + caller.getClassName() + ":" + caller.getMethodName() + ":" + caller.getLineNumber());
+        System.err.println(msg);
         System.exit(-1);
         return null;
     }

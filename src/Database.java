@@ -1,9 +1,6 @@
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,9 +23,12 @@ import java.util.List;
  */
 
 public class Database {
+    //NOTE: multiple client threads can access and write to the db at the same time
+    //We can either make the maps concurrent or make the methods synchronous
     private HashMap<String, Account> acctNameObjMap;
     private HashMap<String, Chat> chatNameObjMap;
-
+    public static final String USERS_PATH = "./Database/Users.txt";
+    public static final String CHATS_DIR = "./Database/Chats/";
     // key = username (non-admin), val = set of chatnames w/ user
     private HashMap<String, HashSet<String>> userChatMap;
 
@@ -46,7 +46,7 @@ public class Database {
     	
     	// get users into acct map
         {        			
-            List<String> lines = Files.readAllLines(Paths.get("./src/Database/Users.txt"));
+            List<String> lines = Files.readAllLines(Paths.get(USERS_PATH));
             for(String line : lines) {
                 String[] cols = line.split(",");
                 Role r = (cols[0].equals("admin"))? Role.ADMINISTRATOR : Role.EMPLOYEE;
@@ -55,7 +55,7 @@ public class Database {
         }
 
         // get chats into chat map
-        File chatsFolder = new File("./Database/Chats");
+        File chatsFolder = new File(CHATS_DIR);
         File[] files = chatsFolder.listFiles();
         if (files == null) return;
 
@@ -129,7 +129,7 @@ public class Database {
      * @throws IOException
      */
     public void saveMessage(Message msg) throws IOException {
-        Path filePath = Path.of("./src/Database/Chats/" + msg.getChatname() + ".txt");
+        Path filePath = Path.of(CHATS_DIR + msg.getChatname() + ".txt");
 
         Files.write(
             filePath,
@@ -152,6 +152,20 @@ public class Database {
     }
 
     /**
+     * @param accountName Name of the account that resides in the chats
+     * @return List of chats needed
+     */
+    public List<Chat> getChats(String accountName) {
+        TODO.todo("Handle the case where no chats are found");
+        HashSet<String> chatNames = userChatMap.get(accountName);
+        List<Chat> chats = List.of();
+        for (String chat : chatNames) {
+            chats.addLast(getChat(chat));
+        }
+        return chats;
+    }
+
+    /**
      * Create a new chat in the database files
      * 
      * @param userList Userlist for the chat
@@ -164,13 +178,14 @@ public class Database {
         		.toArray(Account[]::new);
     	
     	// Save to local files
-        Path filePath = Path.of("./src/Database/Chats/" + chatName + ".txt");
+        Path filePath = Path.of(CHATS_DIR + chatName + ".txt");
+
         Files.write(
-    	    filePath,
-    	    (String.join(",", userList) + System.lineSeparator()).getBytes(),  // add newline
-    	    StandardOpenOption.CREATE
-    	);
-        
+                filePath,
+                (String.join(",", userList) + System.lineSeparator()).getBytes(),  // add newline
+                StandardOpenOption.CREATE
+        );
+
         Chat toAdd = new Chat(acctList, new Message[0], chatName);
         chatNameObjMap.put(chatName, toAdd);
         
