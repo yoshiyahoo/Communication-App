@@ -57,7 +57,7 @@ public class Client {
     	//putting something into the queue
     	//System.out.println("[" + msg.getTime() + "] " + msg.getAccountName() + " in " + msg.getChatname() + ": " + msg.getMsg());
     }
-    
+
     /**
      * gets chatList from Client for GUI
      * 
@@ -155,7 +155,7 @@ public class Client {
     }
 
     public void makeChat() {
-
+        TODO.todo();
     }
 
 
@@ -163,7 +163,7 @@ public class Client {
 
         @Override
         public void run() {
-
+            TODO.todo();
         }
     }
 }
