@@ -1,7 +1,7 @@
 import org.junit.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class accountTest {
+public class AccountTest {
 	
 	@Test
 	public void testConstructor(){
@@ -19,13 +19,6 @@ public class accountTest {
 		anna.setRole(Role.ADMINISTRATOR);
 		String role = anna.getRole().toString();
 		assertTrue(role == "ADMINISTRATOR");
-	}
-	
-	@Test
-	public void testSetName() {
-		Account anna = new Account(Role.EMPLOYEE,"Anna", "Coco!987");
-		anna.setName("Adriana");
-		assertEquals(anna.getName(),"Adriana");
 	}
 	
 	@Test

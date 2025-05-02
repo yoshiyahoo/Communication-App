@@ -47,7 +47,7 @@ public class Client {
     	try {
     		requestStore.addToOutGoing(msg); //hand off to outgoing queue
     	} catch(InterruptedException e) {
-    		System.out.println("Error while sending message: " + e.getMessage());
+    		System.out.println("Interrupted while sending message: " + e.getMessage());
     		Thread.currentThread().interrupt();
     	}
     }
