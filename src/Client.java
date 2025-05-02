@@ -12,9 +12,9 @@ public class Client {
     private Account account;
     private Message msg; // why do we need a message here?
     private String[] userList;
-    private GUI display;
+    private static GUI display;
     private RqstStore requestStore;
-    private ArrayList<Chat> chats;
+    private static ArrayList<Chat> chats;
 
     public static void main(String[] args) {
     	//remove later
@@ -23,17 +23,20 @@ public class Client {
     	try {
     		socket = new Socket("134.154.68.196", 42069);
     		
-    		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-    		
-			out.writeObject(new Login(
-					"test",
-					"password"
-			));
-			
-			Thread.sleep(5000);
-		} catch (IOException | InterruptedException e) {
+//    		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+//    		
+//			out.writeObject(new Login(
+//					"test",
+//					"password"
+//			));
+//			
+//			Thread.sleep(5000);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
+    	
+    	//login and gets chat info, then starts background thread, and goes to main screen
+    	display();
     	
     	System.out.println("Done");
     }
@@ -64,27 +67,29 @@ public class Client {
      * @return	ArrayList<Chat>
      */
     public ArrayList<Chat> getChats() {
-    	return this.chats;
+    	return chats;
     }
 
     //change later, made for testing
-    public void display() {
-    	this.display = new GUI(this); //do in main
+    public static void display() {
+    	display = new GUI();
     	
-    	this.display.loginScreen();
+    	display.loginScreen();
     	
     	//probably need to change location
     	ObjectInputStream objectInputStream;
 		try {
-			objectInputStream = new ObjectInputStream(this.socket.getInputStream());
-			this.getChatFromServer(objectInputStream);
+			objectInputStream = new ObjectInputStream(socket.getInputStream());
+			getChatFromServer(objectInputStream);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		new Thread(new BackgroundHandlerClient(socket)).start();
     	
-    	this.display.mainScreen();
+    	display.mainScreen();
     }
 
     public boolean login(String username, String password) {
@@ -93,7 +98,8 @@ public class Client {
         Login newLogin = new Login(username, password);
     
         try (
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); 
+        		ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             //Sends login to server
             out.writeObject(newLogin);
             out.flush();
@@ -126,9 +132,9 @@ public class Client {
      * 
      * @param chatInputStream	An ObjectInputStream for retrieving chats[] after login
      */
-    private void getChatFromServer(ObjectInputStream chatInputStream) {
+    private static void getChatFromServer(ObjectInputStream chatInputStream) {
     	try {
-			this.chats = (ArrayList<Chat>) chatInputStream.readObject();
+			chats = (ArrayList<Chat>) chatInputStream.readObject();
 			
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
@@ -159,11 +165,74 @@ public class Client {
     }
 
 
-    private static class BackgroundHandlerClient implements Runnable {
-
+    private static class BackgroundHandlerClient extends Client implements Runnable {
+    	private Socket socket;
+    	
+    	public BackgroundHandlerClient(Socket socket) {
+    		this.socket = socket;
+    	}
+    	
         @Override
         public void run() {
-            TODO.todo();
+//            TODO.todo();
+        	ObjectInputStream in;
+        	ObjectOutputStream out;
+			try {
+				in = new ObjectInputStream(this.socket.getInputStream());
+				out = new ObjectOutputStream(this.socket.getOutputStream());
+				
+				new Thread(new IncomingHandler(in)).start();
+				new Thread(new OutgoingHandler(out)).start();
+				
+				//need to handle what is in the incoming queue
+				//need to handle what is to be put in the outgoing queue
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
+    }
+    
+    private static class IncomingHandler extends Client implements Runnable {
+    	private ObjectInputStream in;
+    	
+    	public IncomingHandler(ObjectInputStream in) {
+    		this.in = in;
+    	}
+    	
+		@Override
+		public void run() {
+			while(true) {
+				try {
+					Message msg = (Message) in.readObject();
+					super.requestStore.addToIncoming(msg);
+					
+				} catch (InterruptedException | ClassNotFoundException | IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+    	
+    }
+    
+    private static class OutgoingHandler extends Client implements Runnable {
+    	private ObjectOutputStream out;
+    	
+    	public OutgoingHandler(ObjectOutputStream out) {
+    		this.out = out;
+    	}
+    	
+		@Override
+		public void run() {
+			while(true) {
+				try {
+					out.writeObject(super.requestStore.getOutgoing());
+					
+				} catch (IOException | InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+    	
     }
 }

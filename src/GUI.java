@@ -2,13 +2,12 @@ import java.util.*; //remove scanner when implementing graphics
 import java.io.*; //remove scanner when implementing graphics
 
 
-public class GUI {
-	private Client client; // why do we have the client as an attribute?
+public class GUI extends Client{
+//	private Client client; // why do we have the client as an attribute?
 	private Scanner scan; // remove when implementing graphics
 
 	//just for testing change later
-	public GUI(Client client) {
-		this.client = client;
+	public GUI() {
 		this.scan = new Scanner(System.in);
 	}
 
@@ -23,7 +22,7 @@ public class GUI {
 			username = this.scan.nextLine();
 			System.out.print("Password >>> ");
 			password = this.scan.nextLine();
-			success = this.client.login(username, password);
+			success = super.login(username, password);
 
 		} while(!success);
 
@@ -58,7 +57,7 @@ public class GUI {
 					System.out.println("Enter Chatname >>> ");
 					String chatToGoTo = this.scan.nextLine();
 					
-					for(Chat chat : this.client.getChats()) {
+					for(Chat chat : super.getChats()) {
 						if(chat.getChatName().equals(chatToGoTo)) {
 							currentChat = chat;
 							break;
