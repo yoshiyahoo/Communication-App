@@ -17,12 +17,6 @@ public class Account {
     	this.role = role;
 
     }
-
-    public void setName(String name) {
-    	
-    	this.name = name;
-
-    }
     
     public void setPassword(String password) {
     	this.password = password;

@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.List;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -8,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 	// NOTE client gets added in bg handler after login success
+    // The string is the account username
     private static ConcurrentHashMap<String, BackgroundHandlerServer> clients;
     private static Database data;
     private static ServerSocket server;
@@ -120,11 +122,9 @@ public class Server {
     }
 
     private static class BackgroundHandlerServer extends Server implements Runnable {
-        private Chat currentChat;
         private ObjectOutputStream out;
         private ObjectInputStream in;
         private Socket conn;
-
         public BackgroundHandlerServer(Socket conn) {
             this.conn = conn;
         }
@@ -153,13 +153,15 @@ public class Server {
             if (!super.loginHandling(login)) {
                 // close the thread
                 try {
-                    System.out.println("Login Failed");
+                    System.out.println("Login for " + login.getUsername() + " Failed");
                     out.writeObject(login);
                 } catch (IOException e) {
                     // Doesn't matter
                 }
                 return;
             }
+
+            System.out.println("Login for " + login.getUsername() + " Succeeded");
 
             // Send chats to the Client
             List<Chat> chats = data.getChats(login.getUsername());
@@ -173,20 +175,49 @@ public class Server {
 
             // loop to handle switching chats/sending messages/stuff like that
             while (true) {
-                Message msg;
+                Message msg = null;
+                Chat newChat = null;
                 try {
                     msg = (Message) this.in.readObject();
                 } catch (IOException e) {
                     return;
                 } catch (ClassNotFoundException e) {
-                    // The client is silly?
-                    TODO.todo("Tell client how to handle responses");
+                    // Do nothing here, it might not be over yet
+                }
+                // The client could send over a chat object to create a new chat
+                try {
+                    newChat = (Chat) this.in.readObject();
+                } catch (IOException | ClassNotFoundException e) {
+                    // At this point, we shouldn't expect anything good from the client
                     return;
                 }
 
-                // Write the message into the database
+                if (msg != null) {
+                    try {
+                        data.saveMessage(msg);
+                        // Tell the other clients to get a new message
+                        for (Account user : newChat.getUsers()) {
+                            clients.get(user.getName()).out.writeObject(msg);
+                        }
+                    } catch (IOException e) {
+                        // Stop the thread if it's not done
+                        return;
+                    }
+                }
+                else if (newChat == null) {
+                    // move on to the next iteration
+                    continue;
+                }
+
+
+                // Why do we need to convert accounts to strings when you just convert strings back to accounts
+                // in the addChat() method?
+                String[] usernames = Arrays.stream(newChat.getUsers())
+                        .map(Account::getName)
+                        .toArray(String[]::new);
                 try {
-                    data.saveMessage(msg);
+                    data.addChat(usernames, newChat.getChatName());
+                    TODO.todo("figure out a way to get the chats to all new users, possible to use observers");
                 } catch (IOException e) {
                     return;
                 }
