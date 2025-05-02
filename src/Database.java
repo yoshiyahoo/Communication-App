@@ -1,41 +1,210 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
+/*
+ * User.txt schema
+ * ROLE,NAME,PASSWORD
+ * 
+ * Chat folder schema
+ * filename=[chatname].txt
+ * 
+ * user1,user2,user3...
+ * TIME,USERNAME,MSG1
+ * TIME,USERNAME,MSG2
+ * TIME,USERNAME,MSG3
+ * ...
+ */
+
 public class Database {
-    private List<File> fileSystem;
+    //NOTE: multiple client threads can access and write to the db at the same time
+    //We can either make the maps concurrent or make the methods synchronous
+    private HashMap<String, Account> acctNameObjMap;
+    private HashMap<String, Chat> chatNameObjMap;
+    public static final String USERS_PATH = "./Database/Users.txt";
+    public static final String CHATS_DIR = "./Database/Chats/";
+    // key = username (non-admin), val = set of chatnames w/ user
+    private HashMap<String, HashSet<String>> userChatMap;
 
-    // why are these fields here?
-    private boolean inUse; // what is this for?
-    private Message msg;
-    private Chat[] chats;
+    /**
+     * Constructor for Database class
+     * loads users and chats from files
+     * Users.txt MUST exist
+     * 
+     * @throws IOException 
+     */
+    public Database() throws IOException {
+    	this.acctNameObjMap = new HashMap<>();
+        this.chatNameObjMap = new HashMap<>();
+        this.userChatMap = new HashMap<>();
+    	
+    	// get users into acct map
+        {        			
+            List<String> lines = Files.readAllLines(Paths.get(USERS_PATH));
+            for(String line : lines) {
+                String[] cols = line.split(",");
+                Role r = (cols[0].equals("admin"))? Role.ADMINISTRATOR : Role.EMPLOYEE;
+                acctNameObjMap.put(cols[1], new Account(r, cols[1], cols[2]));
+            }
+        }
 
-    // How do we read the data into the database?
-    public Database() {
+        // get chats into chat map
+        File chatsFolder = new File(CHATS_DIR);
+        File[] files = chatsFolder.listFiles();
+        if (files == null) return;
 
+        for(File file : files) {
+            if(!file.isFile()) continue;
+            List<String> lines = Files.readAllLines(file.toPath());
+            
+            int dotIndex = file.getName().indexOf('.');
+            String chatName = file.getName().substring(0, dotIndex);
+
+            String[] userList = lines.get(0).split(",");
+            Account[] acctList = Arrays.stream(userList)
+            		.map(userName -> acctNameObjMap.get(userName))
+            		.toArray(Account[]::new);
+            
+            
+            // TODO do we need a chat id anymore?
+            Message[] msgHistory = lines.stream()
+                .skip(1)
+                .map(line -> line.split(","))
+                .map(cols -> new Message(
+                		cols[3], 
+                		cols[2], 
+                		chatName, 
+                		LocalDateTime.parse(cols[1])
+                ))
+                .toArray(Message[]::new);
+
+            chatNameObjMap.put(chatName, new Chat(acctList, msgHistory, chatName));
+
+            // add chat to userChatMap for each user
+            for(String user : userList) {
+                // creates set if DNE, always inserts chatname
+                userChatMap
+                    .computeIfAbsent(user, k -> new HashSet<>())
+                    .add(chatName);
+            }
+        }
     }
 
-    // what happens if there are two messages at the same time?
-    // Wouldn't we want to pass the account itself and not just the name? idk
-    public Message getMessage(String accountName, int time) {
+    /**
+     * Get all messages in a given chat
+     * based on sender and send time
+     * 
+     * @param accountName Name of sender
+     * @param ldt Time message was sent
+     * @return List of messages, ordered by chatname
+     */
+    public List<Message> getMessages(String accountName, LocalDateTime ldt) {
+        List<Message> mList = null;
 
+        for(String chatName : userChatMap.get(accountName)) {
+            Chat toCheck = chatNameObjMap.get(chatName);
+            for(Message m : toCheck.getMsgHistory()) {
+                if(!m.getTime().equals(ldt)) continue;
+                if(m.getAccountName().equals(accountName)) {
+                    if(mList == null) mList = new ArrayList<>();
+                    mList.addLast(m);
+                }
+            }
+        }
+
+        return mList;
     }
 
-    // which chat is this message saved in?
-    public void saveMessage(Message msg) {
+    /**
+     * Save new message to chat obj msgHistory
+     * and to chat log file
+     *  
+     * @param msg Message that needs to be saved
+     * @throws IOException
+     */
+    public void saveMessage(Message msg) throws IOException {
+        Path filePath = Path.of(CHATS_DIR + msg.getChatname() + ".txt");
 
+        Files.write(
+            filePath,
+            (msg.toString() + System.lineSeparator()).getBytes(), // ensure newline
+            StandardOpenOption.APPEND   // append to existing file
+        ); 
+        
+       Chat c = chatNameObjMap.get(msg.getChatname());
+       c.addMessage(msg);
     }
 
-    // how do we search for a chat?
-    public Chat getChat() {
-
+    /**
+     * Get chat object with chatName
+     * 
+     * @param chatName Name of desired chat
+     * @return Chat object with chatName
+     */
+    public Chat getChat(String chatName) {
+        return chatNameObjMap.get(chatName);
     }
 
-    // how do we add a chat if we don't get one?
-    public void addChat() {
-
+    /**
+     * @param accountName Name of the account that resides in the chats
+     * @return List of chats needed
+     */
+    public List<Chat> getChats(String accountName) {
+        TODO.todo("Handle the case where no chats are found");
+        HashSet<String> chatNames = userChatMap.get(accountName);
+        List<Chat> chats = List.of();
+        for (String chat : chatNames) {
+            chats.addLast(getChat(chat));
+        }
+        return chats;
     }
 
+    /**
+     * Create a new chat in the database files
+     * 
+     * @param userList Userlist for the chat
+     * @param chatName Name of the chat
+     * @throws IOException
+     */
+    public void addChat(String[] userList, String chatName) throws IOException {
+        Account[] acctList = Arrays.stream(userList)
+        		.map(userName -> acctNameObjMap.get(userName))
+        		.toArray(Account[]::new);
+    	
+    	// Save to local files
+        Path filePath = Path.of(CHATS_DIR + chatName + ".txt");
+
+        Files.write(
+                filePath,
+                (String.join(",", userList) + System.lineSeparator()).getBytes(),  // add newline
+                StandardOpenOption.CREATE
+        );
+
+        Chat toAdd = new Chat(acctList, new Message[0], chatName);
+        chatNameObjMap.put(chatName, toAdd);
+        
+        // add chat name for each user
+        for(String user : userList) {
+            // creates set if DNE, always inserts chatname
+            userChatMap
+                .computeIfAbsent(user, k -> new HashSet<>())
+                .add(chatName);
+        }
+    }
+
+    /**
+     * Get account object with name
+     * 
+     * @param name Name of desired account
+     * @return Account object with name
+     */
     public Account getAccount(String name) {
-
+        return acctNameObjMap.get(name);
     }
 }
