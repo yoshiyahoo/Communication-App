@@ -1,7 +1,9 @@
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.io.*;
 
@@ -15,14 +17,14 @@ public class Client {
     private String[] userList;
     private static GUI display;
     private RqstStore requestStore;
-    private static ArrayList<Chat> chats;
+    private static List<Chat> chats;
 
     public static void main(String[] args) {
     	//remove later
     	System.out.println("Running Client");
     	
     	try {
-    		socket = new Socket("134.154.68.196", 42069);
+    		socket = new Socket("localhost", 42069);
     		out = new ObjectOutputStream(socket.getOutputStream());
     		in = new ObjectInputStream(socket.getInputStream());
     		
@@ -67,9 +69,9 @@ public class Client {
     /**
      * gets chatList from Client for GUI
      * 
-     * @return	ArrayList<Chat>
+     * @return	List<Chat>
      */
-    public ArrayList<Chat> getChats() {
+    public List<Chat> getChats() {
     	return chats;
     }
 
@@ -126,22 +128,28 @@ public class Client {
      */
     private static void getChatFromServer() {
     	try {
-			chats = (ArrayList<Chat>) in.readObject();
+//			chats = (ArrayList<Chat>) in.readObject();
+    		chats = Arrays.asList((Chat[]) in.readObject());
 			
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
 		}
+    	
+//    	for(Chat chat : chats) {
+//    		System.out.println(chat.getChatName());
+//    	}
+//    	System.exit(0);
     }
 
     /**
-     * This takes in a partial name entry from a user search and returns an ArrayList<String>
+     * This takes in a partial name entry from a user search and returns an List<String>
      * that has all user's names that contains partialName String.
      * 
      * @param partialName	A partial name string for searching
-     * @return 				ArrayList<String> for all names hat contains partialName
+     * @return 				List<String> for all names hat contains partialName
      */
-    private ArrayList<String> searchUserList(String partialName) {
-    	ArrayList<String> temp = new ArrayList<String>();
+    private List<String> searchUserList(String partialName) {
+    	List<String> temp = new ArrayList<String>();
 
     	for(String name : this.userList) {
     		if(name.contains(partialName)) {
@@ -178,6 +186,10 @@ public class Client {
 			try {
 				new Thread(new IncomingHandler()).start();
 				new Thread(new OutgoingHandler()).start();
+				
+				//remove
+				Thread.sleep(5000);
+				System.exit(0);
 				
 				//handles incoming messages from client request store queue
 				while(true) {
