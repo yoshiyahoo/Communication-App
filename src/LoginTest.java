@@ -1,9 +1,6 @@
-
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-
-
 
 public class LoginTest 
 {
@@ -17,5 +14,4 @@ public class LoginTest
         assertEquals("Username should match", login.getUsername(), testUsername);
         assertEquals("Passwords should match", login.getPassword(), testPassword);
     }
-
 }

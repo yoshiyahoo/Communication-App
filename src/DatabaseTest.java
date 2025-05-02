@@ -16,8 +16,7 @@ public class DatabaseTest {
     @Before
     public void setUp() throws IOException {
         // Setup temporary Users.txt
-        Path usersPath = Paths.get("./src/Database/Users.txt");
-        Files.createDirectories(usersPath.getParent());
+        Path usersPath = Paths.get(Database.USERS_PATH);
         Files.write(usersPath, "employee,John,burger\nadmin,Alice,fry".getBytes());
 
         db = new Database();
@@ -33,13 +32,13 @@ public class DatabaseTest {
     @After
     public void tearDown() throws IOException {
         // Delete Users.txt
-        Path usersFile = Paths.get("./src/Database/Users.txt");
+        Path usersFile = Paths.get(Database.USERS_PATH);
         if (Files.exists(usersFile)) {
             Files.delete(usersFile);
         }
 
         // Delete all files inside Chats/
-        Path chatsDir = Paths.get("./src/Database/Chats/");
+        Path chatsDir = Paths.get(Database.CHATS_DIR);
         if (Files.exists(chatsDir)) {
             Files.walk(chatsDir)
                  .filter(Files::isRegularFile) // Only delete files, not folders
@@ -94,7 +93,7 @@ public class DatabaseTest {
         db.saveMessage(msg);
 
         // Check if file was updated (very basic check)
-        Path chatFile = Paths.get("./src/Database/Chats/General.txt");
+        Path chatFile = Paths.get(Database.CHATS_DIR + "General.txt");
         String content = new String(Files.readAllBytes(chatFile));
         assertTrue(content.contains("This is a test"));
     }

@@ -7,7 +7,7 @@ import java.util.Queue;
 import java.io.*;
 
 public class Client {
-    private Socket socket;
+    private static Socket socket;
     private Queue<Message> offlineQ = new LinkedList<>(); // need to rename QueueForOfflineMessages in Design
     private Account account;
     private Message msg; // why do we need a message here?
@@ -17,7 +17,25 @@ public class Client {
     private ArrayList<Chat> chats;
 
     public static void main(String[] args) {
+    	//remove later
+    	System.out.println("Running Client");
     	
+    	try {
+    		socket = new Socket("134.154.68.196", 42069);
+    		
+    		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+    		
+			out.writeObject(new Login(
+					"test",
+					"password"
+			));
+			
+			Thread.sleep(5000);
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+    	
+    	System.out.println("Done");
     }
 
     // why is this method needed?
@@ -39,7 +57,7 @@ public class Client {
     	//putting something into the queue
     	//System.out.println("[" + msg.getTime() + "] " + msg.getAccountName() + " in " + msg.getChatname() + ": " + msg.getMsg());
     }
-    
+
     /**
      * gets chatList from Client for GUI
      * 
@@ -137,7 +155,7 @@ public class Client {
     }
 
     public void makeChat() {
-
+        TODO.todo();
     }
 
 
@@ -145,7 +163,7 @@ public class Client {
 
         @Override
         public void run() {
-
+            TODO.todo();
         }
     }
 }

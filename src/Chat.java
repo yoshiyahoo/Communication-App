@@ -37,7 +37,7 @@ public class Chat implements Serializable {
     }
     
     public Account[] getUsers() {
-    	return (Account[]) this.users.toArray();
+    	return this.users.toArray(new Account[0]);
     }
     
     public void addMessage(Message msg) {
