@@ -18,11 +18,11 @@ public class GUI {
 		boolean success = false;
 		LoginScreen loginScreen = new LoginScreen(this.client);
         do 
-		{
+	{
             success = loginScreen.getLoginStatus();
 			
         } 
-		while (!success);
+	while (!success);
 
     }
 		
