@@ -1,7 +1,6 @@
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -14,19 +13,22 @@ public class Client {
     private Queue<Message> offlineQ = new LinkedList<>(); // need to rename QueueForOfflineMessages in Design
     private Account account;
     private Message msg; // why do we need a message here?
-    private String[] userList;
+    private static String[] userList;
     private static GUI display;
-    private RqstStore requestStore;
+    private static RqstStore requestStore;
     private static List<Chat> chats;
 
     public static void main(String[] args) {
     	//remove later
-    	System.out.println("Running Client");
+    	System.out.println("Running Client\n");
     	
     	try {
     		socket = new Socket("localhost", 42069);
     		out = new ObjectOutputStream(socket.getOutputStream());
     		in = new ObjectInputStream(socket.getInputStream());
+    		
+    		//makes the Request Store object
+    		requestStore = new RqstStore();
     		
     		//login and gets chat info, then starts background thread, and goes to main screen
         	display();
@@ -41,9 +43,17 @@ public class Client {
 //			Thread.sleep(5000);
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				socket.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
     	
-    	System.out.println("Done");
+    	System.out.println("\nClient Done");
+    	System.exit(0); //for cleaning up and running thread
     }
 
     // why is this method needed?
@@ -82,8 +92,10 @@ public class Client {
     	display.loginScreen();
     	
     	getChatFromServer();
+    	
+    	getUserNamesFromServer();
 		
-		new Thread(new BackgroundHandlerClient()).start();
+		new Thread(new BackgroundHandlerClient(), "Background Handler").start();
     	
     	display.mainScreen();
     }
@@ -123,8 +135,6 @@ public class Client {
 
     /**
      * Called by main for getting chat list for clients account after login.
-     * 
-     * @param chatInputStream	An ObjectInputStream for retrieving chats[] after login
      */
     private static void getChatFromServer() {
     	try {
@@ -139,6 +149,18 @@ public class Client {
 //    		System.out.println(chat.getChatName());
 //    	}
 //    	System.exit(0);
+    }
+    
+    /**
+     * Called by main for getting user names for clients account after login.
+     */
+    private static void getUserNamesFromServer() {
+    	try {
+    		userList = (String[]) in.readObject();
+			
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -160,23 +182,34 @@ public class Client {
     	return temp;
     }
 
-     public void makeChat() {
-        String testName = "test";
-        Account[] testList = { account };
-        Chat newChat = new Chat(testList, testName);
-//        try {
-//
-//             Receive response from server
-//            Database dataBase = (Database) in.readObject();
-//            dataBase.addChat(newChat);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+    public void makeChat(Account[] users, String chatname) {
+    	//        String testName = "test";
+    	//        Account[] testList = { account };
+
+    	Chat newChat = new Chat(users, chatname);
+    	
+    	chats.add(newChat);
+    	
+    	try {
+			out.writeObject(newChat);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+    	//        try {
+    	//
+    	//             Receive response from server
+    	//            Database dataBase = (Database) in.readObject();
+    	//            dataBase.addChat(newChat);
+    	//
+    	//        } catch (IOException e) {
+    	//            e.printStackTrace();
+    	//        }
     }
 
 
-    private static class BackgroundHandlerClient extends Client implements Runnable {
+    private static class BackgroundHandlerClient implements Runnable {
     	
     	public BackgroundHandlerClient() {}
     	
@@ -184,17 +217,13 @@ public class Client {
         public void run() {
 //            TODO.todo();
 			try {
-				new Thread(new IncomingHandler()).start();
-				new Thread(new OutgoingHandler()).start();
-				
-				//remove
-				Thread.sleep(5000);
-				System.exit(0);
+				new Thread(new IncomingHandler(), "Incoming Handler").start();
+				new Thread(new OutgoingHandler(), "Outgoing Handler").start();
 				
 				//handles incoming messages from client request store queue
 				while(true) {
 					//should block thread because its a blocking queue in request store
-					Message msg = super.requestStore.getIncoming();
+					Message msg = requestStore.getIncoming();
 					
 					//this is ugly wrote while tired, might want to change later
 					for(Chat chat : chats) {
@@ -212,7 +241,7 @@ public class Client {
         }
     }
     
-    private static class IncomingHandler extends Client implements Runnable {
+    private static class IncomingHandler implements Runnable {
     	
     	public IncomingHandler() {}
     	
@@ -221,7 +250,7 @@ public class Client {
 			while(true) {
 				try {
 					Message msg = (Message) in.readObject();
-					super.requestStore.addToIncoming(msg);
+					requestStore.addToIncoming(msg);
 					
 				} catch (InterruptedException | ClassNotFoundException | IOException e) {
 					e.printStackTrace();
@@ -231,7 +260,7 @@ public class Client {
     	
     }
     
-    private static class OutgoingHandler extends Client implements Runnable {
+    private static class OutgoingHandler implements Runnable {
     	
     	public OutgoingHandler() {}
     	
@@ -240,7 +269,7 @@ public class Client {
 			while(true) {
 				try {
 					//should block thread because its a blocking queue in request store
-					out.writeObject(super.requestStore.getOutgoing());
+					out.writeObject(requestStore.getOutgoing());
 					
 				} catch (IOException | InterruptedException e) {
 					e.printStackTrace();

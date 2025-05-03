@@ -51,16 +51,28 @@ public class GUI extends Client{
 				case 1:
 					//finish this when makeChat() is made
 //					this.client.makeChat();
-					System.out.println("Not made yet");
+//					System.out.println("Not made yet");
+					
+					ArrayList<Account> users = new ArrayList<Account>();
+					
+					
+					
 					break;
 				case 2:
-					System.out.println("Enter Chatname >>> ");
-					String chatToGoTo = this.scan.nextLine();
-					
+					System.out.println();
 					for(Chat chat : super.getChats()) {
-						if(chat.getChatName().equals(chatToGoTo)) {
-							currentChat = chat;
-							break;
+						System.out.println(chat.getChatName());
+					}
+					
+					while(currentChat == null) {
+						System.out.print("\nEnter Chatname >>> ");
+						String chatToGoTo = this.scan.nextLine();
+						
+						for(Chat chat : super.getChats()) {
+							if(chat.getChatName().equals(chatToGoTo)) {
+								currentChat = chat;
+								break;
+							}
 						}
 					}
 					
@@ -86,6 +98,8 @@ public class GUI extends Client{
 				case 4:
 					//need to be able to switch to a chat to make
 //					System.out.println("Not made yet");
+					
+					
 					break;
 				case 5:
 					//maybe should have a logout method on client and server

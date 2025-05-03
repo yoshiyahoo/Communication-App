@@ -16,6 +16,7 @@ public class Chat implements Serializable {
     public Chat(Account[] users, String chatName) {
     	this.users = new ArrayList<>(Arrays.asList(users));
     	this.chatName = chatName;
+    	this.msgHistory = new ArrayList<Message>();
     }
 
     public Chat(Account[] users, Message[] msgHistory, String chatName) {
