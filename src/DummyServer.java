@@ -1,3 +1,4 @@
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,29 +8,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DummyServer {
+
     public static void main(String[] args) {
         ServerSocket ss = null;
         try {
             //dummy server setup
             ss = new ServerSocket(42069);
             ss.setReuseAddress(true);
-            
+
             System.out.println("\n<<< Server is Running >>>");
-			System.out.println("\nTo Stop Server Press Ctrl+C\n");
-            System.out.println("Server IP: localhost\n" 
-                                + "Server Port: "
-                                + ss.getLocalPort() 
-                                + "\n");
+            System.out.println("\nTo Stop Server Press Ctrl+C\n");
+            System.out.println("Server IP: localhost\n"
+                    + "Server Port: "
+                    + ss.getLocalPort()
+                    + "\n");
 
             Socket cs = ss.accept();
-            ObjectInputStream in = new ObjectInputStream(cs.getInputStream());
             ObjectOutputStream out = new ObjectOutputStream(cs.getOutputStream());
+
+            //Sends a dummy object to initalize a stream. For some reason this is the only one that work?
+            //CHECK THIS LATER.
+            out.writeObject(null);
+
+            ObjectInputStream in = new ObjectInputStream(cs.getInputStream());
 
             //login test
             Account test = new Account(Role.EMPLOYEE, "test", "password");
-            while(true) {
+            while (true) {
                 Login login = (Login) in.readObject();
-                if(login.getUsername().equals("test") && login.getPassword().equals("password")) {
+                if (login.getUsername().equals("test") && login.getPassword().equals("password")) {
                     //sends a success login
                     Login responseLogin = new Login(LoginType.SUCCESS);
                     out.writeObject(responseLogin);
@@ -56,7 +63,7 @@ public class DummyServer {
                 "Bob",
                 "John"
             };
-            Message[] msgHistory = { 
+            Message[] msgHistory = {
                 new Message("test msg 1", "test", "TestChat"),
                 new Message("test msg 2", "test", "TestChat")
             };
@@ -69,10 +76,10 @@ public class DummyServer {
             out.writeObject(userNames);
 
             //tests both new messages and new chats
-            while(true) {
+            while (true) {
                 var objGot = in.readObject();
 
-                if(objGot.getClass().equals(Chat.class)) { //for getting a new chat that was made
+                if (objGot.getClass().equals(Chat.class)) { //for getting a new chat that was made
                     System.out.println("<<< Got A New Chat >>>\n");
 
                 } else { //for getting a new message
@@ -80,12 +87,12 @@ public class DummyServer {
                     Message msg = (Message) objGot;
                     // Message msg = (Message) in.readObject();
                     Message responseMsg = new Message(
-                        msg.getMsg().toUpperCase(), 
-                        msg.getAccountName(), 
-                        msg.getChatname()
+                            msg.getMsg().toUpperCase(),
+                            msg.getAccountName(),
+                            msg.getChatname()
                     );
                     out.writeObject(responseMsg);
-                    if(msg.getMsg().equals("done")) {
+                    if (msg.getMsg().equals("done")) {
                         break;
                     }
                 }
@@ -97,7 +104,7 @@ public class DummyServer {
             System.out.println("<<< Client Logged Out >>>");
         } finally {
             try {
-                if(ss != null) {
+                if (ss != null) {
                     ss.close();
                 }
 

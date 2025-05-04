@@ -33,13 +33,16 @@ public class Client {
     		
     		//makes the Request Store object
     		requestStore = new RqstStore();
-    		
+
     		//login and gets chat info, then starts background thread, and goes to main screen
         	display();
     		
-		} catch (IOException e) {
+		} catch (IOException e)
+         {
 			e.printStackTrace();
-		} finally {
+		} 
+        
+        /*finally {
 			try {
 				socket.close();
 				
@@ -50,12 +53,10 @@ public class Client {
     	
     	System.out.println("\nClient Done");
     	System.exit(0); //for cleaning up and running thread
+        */
     }
 
-    // why is this method needed?
-    //public Queue<Message> getMessageQueue() {
-    //	return offlineQ;
-    //}
+   
     public void sendMsg(Message msg) {
         try {
             requestStore.addToOutGoing(msg); //hand off to outgoing queue
@@ -103,15 +104,18 @@ public class Client {
     	
     	display.loginScreen();
     	
+
+        //Read these later; probably in display.mainScreen();
+        /*
     	getChatFromServer();
     	
-    	getUserNamesFromServer();
+    	//getUserNamesFromServer();
+        */
 		
 		new Thread(new BackgroundHandlerClient(), "Background Message Handler").start();
 		new Thread(new IncomingHandler(), "Incoming Chat Handler").start();
 		new Thread(new OutgoingHandler(), "Outgoing Chat Handler").start();
-    	
-    	display.mainScreen();
+
     }
 
     public boolean login(String username, String password) {
