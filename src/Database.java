@@ -113,7 +113,7 @@ public class Database {
                 if(!m.getTime().equals(ldt)) continue;
                 if(m.getAccountName().equals(accountName)) {
                     if(mList == null) mList = new ArrayList<>();
-                    mList.addLast(m);
+                    mList.add(m);
                 }
             }
         }
@@ -167,7 +167,7 @@ public class Database {
         }
         List<Chat> chats = List.of();
         for (String chat : chatNames) {
-            chats.addLast(getChat(chat));
+            chats.add(getChat(chat));
         }
         return chats;
     }
