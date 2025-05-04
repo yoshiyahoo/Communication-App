@@ -2,55 +2,54 @@
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.io.*;
 
 public class Client {
 
     private static Socket socket;
+    private static ObjectOutputStream out;
+    private static ObjectInputStream in;
     private Queue<Message> offlineQ = new LinkedList<>(); // need to rename QueueForOfflineMessages in Design
-    private Account account;
+    private static Account account;
     private Message msg; // why do we need a message here?
-    private String[] userList;
-    private GUI display;
-    private RqstStore requestStore;
-    private ArrayList<Chat> chats;
+    private static String[] userList;
+    private static GUI display;
+    private static RqstStore requestStore;
+    private static List<Chat> chats;
 
     public static void main(String[] args) {
-        //remove later
-        /*System.out.println("Running Client");
+    	//remove later
+    	System.out.println("Running Client\n");
     	
     	try {
-    		socket = new Socket("134.154.68.196", 42069);
+    		socket = new Socket("localhost", 42069);
+    		out = new ObjectOutputStream(socket.getOutputStream());
+    		in = new ObjectInputStream(socket.getInputStream());
     		
-    		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+    		//makes the Request Store object
+    		requestStore = new RqstStore();
     		
-			out.writeObject(new Login(
-					"test",
-					"password"
-			));
-			
-			Thread.sleep(5000);
-		} catch (IOException | InterruptedException e) {
+    		//login and gets chat info, then starts background thread, and goes to main screen
+        	display();
+    		
+		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				socket.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
     	
-    	System.out.println("Done");
-         */
-
-        try 
-        {
-            socket = new Socket("localhost", 42069);
-            Client client = new Client();
-            client.display();
-            Thread.sleep(5000);
-        } 
-        catch (IOException | InterruptedException e) 
-        {
-			e.printStackTrace();
-		}
-
+    	System.out.println("\nClient Done");
+    	System.exit(0); //for cleaning up and running thread
     }
 
     // why is this method needed?
@@ -74,70 +73,74 @@ public class Client {
 
     /**
      * gets chatList from Client for GUI
-     *
-     * @return	ArrayList<Chat>
+     * 
+     * @return	List<Chat>
      */
-    public ArrayList<Chat> getChats() {
-        return this.chats;
+    public List<Chat> getChats() {
+    	return chats;
+    }
+    
+    /**
+     * gets userList from Client for GUI
+     * 
+     * @return String[]
+     */
+    public String[] getUserList() {
+    	return userList;
+    }
+    
+    /**
+     * gets user account for GUI when creating a message object
+     * 
+     * @return Account
+     */
+    public Account getUserAccount() {
+    	return account;
     }
 
-    //change later, made for testing
-    public void display() 
-    {
-        this.display = new GUI(this); //do in main
-
-        this.display.loginScreen();
-
-        //probably need to change location
-        ObjectInputStream objectInputStream;
-        try 
-        {
-            System.out.println("Skipping login screen");
-            objectInputStream = new ObjectInputStream(this.socket.getInputStream());
-            this.getChatFromServer(objectInputStream);
-
-        } catch (IOException e) {
-
-            e.printStackTrace();
-        }
-
-        this.display.mainScreen();
-        
+    public static void display() {
+    	display = new GUI();
+    	
+    	display.loginScreen();
+    	
+    	getChatFromServer();
+    	
+    	getUserNamesFromServer();
+		
+		new Thread(new BackgroundHandlerClient(), "Background Message Handler").start();
+		new Thread(new IncomingHandler(), "Incoming Chat Handler").start();
+		new Thread(new OutgoingHandler(), "Outgoing Chat Handler").start();
+    	
+    	display.mainScreen();
     }
 
     public boolean login(String username, String password) {
         boolean loginSucceeded = false;
 
         Login newLogin = new Login(username, password);
-
-        try (
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); 
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) 
-            {
-
+    
+        try {
             //Sends login to server
             out.writeObject(newLogin);
             out.flush();
-
-            //if a login object is returned at all, that means it failed.
-            //we could add something to a login object which states if the login failed or not, but for now, I'm working with what I got.
-           Login returnedLogin = (Login) in.readObject();
-           if(returnedLogin != null)
-           {
-                loginSucceeded = false;
-           }
-           else
-           {
+            
+            // Receive response from server
+            Login loginResponse = (Login) in.readObject();
+    
+            if (loginResponse.getLoginStatus() == LoginType.SUCCESS) 
+            {
+                System.out.println("Login successful!");
                 loginSucceeded = true;
-           }
-
-        } 
-        catch (SocketException e) 
-        {
-            System.err.println(e);
-        }
-         catch (IOException | ClassNotFoundException e) 
-        {
+                
+                //gets account info from server if the login was successful
+                account = (Account) in.readObject();
+            } 
+            else 
+            {
+                System.out.println("Login failed! Please try again.");
+            }
+            
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -147,29 +150,37 @@ public class Client {
 
     /**
      * Called by main for getting chat list for clients account after login.
-     *
-     * @param chatInputStream	An ObjectInputStream for retrieving chats[] after
-     * login
      */
-    private void getChatFromServer(ObjectInputStream chatInputStream) {
-        try {
-            this.chats = (ArrayList<Chat>) chatInputStream.readObject();
-
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        }
+    private static void getChatFromServer() {
+    	try {
+    		chats = (List<Chat>) in.readObject();
+			
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    /**
+     * Called by main for getting user names for clients account after login.
+     */
+    private static void getUserNamesFromServer() {
+    	try {
+    		userList = (String[]) in.readObject();
+			
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
-     * This takes in a partial name entry from a user search and returns an
-     * ArrayList<String>
+     * This takes in a partial name entry from a user search and returns an List<String>
      * that has all user's names that contains partialName String.
      *
      * @param partialName	A partial name string for searching
-     * @return ArrayList<String> for all names hat contains partialName
+     * @return 				List<String> for all names hat contains partialName
      */
-    private ArrayList<String> searchUserList(String partialName) {
-        ArrayList<String> temp = new ArrayList<String>();
+    private List<String> searchUserList(String partialName) {
+    	List<String> temp = new ArrayList<String>();
 
         for (String name : this.userList) {
             if (name.contains(partialName)) {
@@ -180,26 +191,100 @@ public class Client {
         return temp;
     }
 
-    public void makeChat() {
-        String testName;
-        Chat newChat = Chat(account, testName);
-        try (
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream()); ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-
-            // Receive response from server
-            Database dataBase = (Database) in.readObject();
-            dataBase.addChat(newChat);
-
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+    public void makeChat(String[] users, String chatname) {
+    	Chat newChat = new Chat(users, chatname);
+    	
+    	chats.add(newChat);
+    	
+    	try {
+			requestStore.addToOutGoing(newChat);
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
     }
 
+    //handles the objects in request store getIncoming()
     private static class BackgroundHandlerClient implements Runnable {
 
-        @Override
-        public void run() {
-            TODO.todo();
-        }
+    	public BackgroundHandlerClient() {}
+
+    	@Override
+    	public void run() {
+    		//            TODO.todo();
+    		try {
+    			//handles incoming messages from client request store queue
+    			while(true) {
+    				//should block thread because its a blocking queue in request store
+    				Object obj = requestStore.getIncoming();
+    				
+    				//if object is a Message
+    				if(obj.getClass() == Message.class) {
+    					Message msg = (Message) obj;
+    					
+    					//this is ugly wrote while tired, might want to change later
+        				for(Chat chat : chats) {
+        					for(String user : chat.getUsersNames()) {
+        						if(user.equals(msg.getAccountName())) {
+        							chat.addMessage(msg);
+        						}
+        					}
+        				}
+        				
+        				continue;
+    				}
+
+    				//if object is a Chat
+    				if(obj.getClass() == Chat.class) {
+    					Chat chat = (Chat) obj;
+    					
+    					chats.add(chat);
+    				}
+    			}
+
+    		} catch (InterruptedException e) {
+    			e.printStackTrace();
+    		}
+    	}
+    }
+    
+    //puts the incoming objects into request store addToIncoming()
+    private static class IncomingHandler implements Runnable {
+    	
+    	public IncomingHandler() {}
+    	
+		@Override
+		public void run() {
+			while(true) {
+				try {
+					Object incomingObj = in.readObject();
+					requestStore.addToIncoming(incomingObj);
+					
+				} catch (InterruptedException | ClassNotFoundException | IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+    	
+    }
+    
+    //sends objects from request store getOutgoing() to server
+    private static class OutgoingHandler implements Runnable {
+    	
+    	public OutgoingHandler() {}
+    	
+		@Override
+		public void run() {
+			while(true) {
+				try {
+					//should block thread because its a blocking queue in request store
+					out.writeObject(requestStore.getOutgoing());
+					
+				} catch (IOException | InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+    	
     }
 }
