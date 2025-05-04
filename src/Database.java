@@ -156,8 +156,15 @@ public class Database {
      * @return List of chats needed
      */
     public List<Chat> getChats(String accountName) {
-        TODO.todo("Handle the case where no chats are found");
         HashSet<String> chatNames = userChatMap.get(accountName);
+        if (chatNames == null) {
+            //TODO.todo("Handle the case where no chats are found");
+            Account[] lonelyUser = new Account[]{
+                    this.getAccount(accountName)
+            };
+            Chat emptyChat = new Chat(lonelyUser, accountName);
+            return List.of(emptyChat);
+        }
         List<Chat> chats = List.of();
         for (String chat : chatNames) {
             chats.addLast(getChat(chat));
@@ -206,5 +213,13 @@ public class Database {
      */
     public Account getAccount(String name) {
         return acctNameObjMap.get(name);
+    }
+
+    /**
+     * Get all the accounts
+     * @return all the accounts
+     */
+    public List<Account> getAccounts() {
+        return List.copyOf(acctNameObjMap.values());
     }
 }

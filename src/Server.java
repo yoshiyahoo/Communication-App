@@ -150,18 +150,19 @@ public class Server {
             }
 
             // The client will infer that it logged in or not
-            if (!super.loginHandling(login)) {
-                // close the thread
-                try {
-                    System.out.println("Login for " + login.getUsername() + " Failed");
-                    out.writeObject(login);
-                } catch (IOException e) {
-                    // Doesn't matter
+            try {
+                if (!super.loginHandling(login)) {
+                    // close the thread
+                    System.out.println("Login for User [" + login.getUsername() + "] Failed");
+                    out.writeObject(new Login(LoginType.FAILURE));
+                    return;
                 }
+                System.out.println("Login for User [" + login.getUsername() + "] Succeeded");
+                out.writeObject(new Login(LoginType.SUCCESS));
+            } catch (IOException e) {
+                // Errors, disconnect the client
                 return;
             }
-
-            System.out.println("Login for " + login.getUsername() + " Succeeded");
 
             // Send chats to the Client
             List<Chat> chats = data.getChats(login.getUsername());
@@ -173,6 +174,17 @@ public class Server {
                 return;
             }
 
+            // Send all usernames to the Client
+            String[] allUsernames =  data.getAccounts()
+                    .stream()
+                    .map(account -> account.getName())
+                    .toArray(String[]::new);
+            try {
+                this.out.writeObject(allUsernames);
+            } catch (IOException e) {
+                return;
+            }
+
             // loop to handle switching chats/sending messages/stuff like that
             while (true) {
                 Message msg = null;
@@ -180,6 +192,7 @@ public class Server {
                 try {
                     msg = (Message) this.in.readObject();
                 } catch (IOException e) {
+                    e.printStackTrace();
                     return;
                 } catch (ClassNotFoundException e) {
                     // Do nothing here, it might not be over yet
@@ -195,8 +208,10 @@ public class Server {
                 if (msg != null) {
                     try {
                         data.saveMessage(msg);
-                        // Tell the other clients to get a new message
+                        // Tell all clients to get a new message
                         for (Account user : newChat.getUsers()) {
+                            // We don't have to send it back to the original user
+                            if (user.equals(conn)) { continue; }
                             clients.get(user.getName()).out.writeObject(msg);
                         }
                     } catch (IOException e) {
@@ -208,7 +223,6 @@ public class Server {
                     // move on to the next iteration
                     continue;
                 }
-
 
                 // Why do we need to convert accounts to strings when you just convert strings back to accounts
                 // in the addChat() method?

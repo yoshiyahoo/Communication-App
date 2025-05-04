@@ -131,7 +131,8 @@ public class Client {
                 loginSucceeded = true;
                 
                 //gets account info from server if the login was successful
-                account = (Account) in.readObject();
+				// No we dont? -Josiah
+                // account = (Account) in.readObject();
             } 
             else 
             {
