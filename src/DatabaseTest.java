@@ -15,7 +15,9 @@ public class DatabaseTest {
 
     @Before
     public void setUp() throws IOException {
-        // Setup temporary Users.txt
+    	System.out.println("Current working directory: " + System.getProperty("user.dir"));
+    	
+    	// Setup temporary Users.txt
         Path usersPath = Paths.get(Database.USERS_PATH);
         Files.write(usersPath, "employee,John,burger\nadmin,Alice,fry".getBytes());
 
