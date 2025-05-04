@@ -1,8 +1,14 @@
 import org.junit.platform.suite.api.SelectClasses;
-import org.junit.platform.suite.api.Suite; 
+import org.junit.platform.suite.api.Suite;
 
 @Suite
-@SelectClasses({ChatTest.class, DatabaseTest.class, MessageTest.class})
+@SelectClasses({ 
+	AccountTest.class, 
+	ChatTest.class, 
+	DatabaseTest.class, 
+	LoginTest.class, 
+	MessageTest.class,
+	RqstStoreTest.class })
 public class TestSuite {
 	// Nothing needed in the body b/c you have test classes outside of it
 }
