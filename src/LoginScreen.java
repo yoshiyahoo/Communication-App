@@ -29,6 +29,7 @@ public class LoginScreen
         //Panel setup
         //Main panel
         mainPanel = new JPanel(new BorderLayout());
+        
          //Color is applied through a static method.
         GUITools.ColorGUIComponents(mainPanel);
 
