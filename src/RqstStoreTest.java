@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import java.util.concurrent.*; //for managing and controlling thread execution 
@@ -8,6 +9,12 @@ public class RqstStoreTest{
 	
 	// A single-threaded scheduler used to defer puts in order to unblock take() in tests
 	private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+	
+	//for cleanup
+	@AfterAll
+	public static void shutdownScheduler() {
+		scheduler.shutdown();
+	}
 	
 	@Test
 	@Timeout(1) //fail if still blocked after 1 second
