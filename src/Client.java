@@ -292,7 +292,7 @@ public class Client {
     			}
 
     		} catch (InterruptedException e) {
-    			System.out.println("Background was interruped");
+//    			System.out.println("Background was interruped");
     		}
     	}
     }
@@ -306,7 +306,7 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
-					System.out.println("Reading messages!");
+//					System.out.println("Reading messages!");
 					Object incomingObj = in.readObject();
 					requestStore.addToIncoming(incomingObj);
 					
@@ -339,11 +339,11 @@ public class Client {
 					out.writeObject(requestStore.getOutgoing());
 					
 				} catch (IOException e) {
-					System.out.println("Socket closed");
+//					System.out.println("Socket closed");
 					break;
 					
 				} catch (InterruptedException e) {
-					System.out.println("outgoing was interruped");
+//					System.out.println("outgoing was interruped");
 					break;
 				}
 			}
