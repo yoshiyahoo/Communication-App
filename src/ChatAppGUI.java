@@ -1,5 +1,6 @@
 
 import java.awt.*;
+import java.util.ArrayList;
 import javax.swing.*;
 
 public class ChatAppGUI extends Client {
@@ -16,7 +17,7 @@ public class ChatAppGUI extends Client {
     //Chat components
     private String currentUsername;
     private JLabel userLabel;
-    private DefaultListModel<String> chatListModel;
+    public DefaultListModel<String> chatListModel;
     private JList<String> chatList;
     private DefaultListModel<String> userListModel;
     private JList<String> userList;
@@ -73,6 +74,8 @@ public void appendMessage(String line) {
         GUITools.ColorGUIComponents(chatList);
 
         JButton addChat = new JButton("+");
+        addChat.setMaximumSize(new Dimension(1000, 30)); 
+        addChat.setAlignmentX(Component.CENTER_ALIGNMENT);
         GUITools.ColorGUIComponents(addChat);
 
         JPanel left = new JPanel();
@@ -129,10 +132,10 @@ public void appendMessage(String line) {
         GUITools.ColorGUIComponents(right);
 
         JLabel userListLabel = new JLabel("Users");
-        GUITools.ColorGUIComponents(userListLabel);
         right.add(userListLabel, BorderLayout.NORTH);
         right.add(new JScrollPane(userList), BorderLayout.CENTER);
         right.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        GUITools.ColorGUIComponents(userListLabel);
 
         // Bottom: logout + error message
         JButton logoutBtn = new JButton("LOGOUT");
@@ -142,7 +145,7 @@ public void appendMessage(String line) {
         chatError.setForeground(Color.RED);
         GUITools.ColorGUIComponents(chatError);
 
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 10,10));
         GUITools.ColorGUIComponents(bottom);
         bottom.add(logoutBtn);
         bottom.add(chatError);
@@ -162,42 +165,11 @@ public void appendMessage(String line) {
         return panel;
     }
 
-    /*private void doLogin() {
-    	String user = usernameField.getText();
-    	String pass = new String(passwordField.getPassword());
-    	
-    	super.startSocket();
-    	
-    	boolean success = super.login(user, pass);
-    	
-    	if(success) {
-    		currentUsername = user;
-    		userLabel.setText(currentUsername);
-    		cards.show(root, "chat");
-    		
-    		loginError.setText("");
-    		
-    		super.getChatFromServer();
-    		for(Chat chat : super.getChats()) {
-    			this.chatListModel.addElement(chat.getChatName());
-    		}
-    		
-        	super.getUserNamesFromServer();
-
-        	super.startClientThreads();
-        	
-    	} else {
-    		loginError.setText("Invalid credentials");
-    		super.closeSocket();
-    	}
-    }
-     */
     private void doLogout() 
     {
-
-    	cards.show(root, "login");
+    	super.display();
     	super.stopClientThreads();
-    	super.closeSocket();
+        frame.dispose();
     } 
     
     private void loadSelectedChat() {
@@ -216,21 +188,7 @@ public void appendMessage(String line) {
     	chatTitle.setText(chat);
     	//wipe out old text
     	historyArea.setText("");
-    	//append each msg with newline
-//    	for(Message msg : this.currentChat.getMsgHistory()) {
-//    		historyArea.setText(
-//    				historyArea.getText()
-//    				+ "\n"
-//    				+ msg.getAccountName()
-//    				+ " "
-//    				+ msg.getTime().getHour()
-//    				+ ":"
-//    				+ msg.getTime().getMinute()
-//    				+ " >>> "
-//    				+ msg.getMsg()
-//    		);
-    	
-    	//}
+    
     	for (Message msg : this.currentChat.getMsgHistory()) {
     		  String line = String.format(
     				  "%s %02d:%02d >>> %s%n",
@@ -272,65 +230,70 @@ public void appendMessage(String line) {
     }
 
     private void showNewChatDialog() {
-    	ArrayList<String> newChatUsers = new ArrayList<String>();
-    	
-    	JDialog dlg = new JDialog(frame, "New Chat", true);
-    	dlg.setSize(300,400);
-    	dlg.setLayout(new BorderLayout(5,5));
+        ArrayList<String> newChatUsers = new ArrayList<>();
+    
+        JDialog dlg = new JDialog(frame, "New Chat", true);
+        dlg.setSize(300, 400);
+        dlg.setLayout(new BorderLayout(5, 5));
+    
 
-    	JTextField nameIn = new JTextField();
-    	nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
-    	JTextField usersIn = new JTextField();
-    	usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
-    	JTextField searchIn = new JTextField();
-    	searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
-    	DefaultListModel<String> searchModel = new DefaultListModel<>();
-    	JList<String> searchList = new JList<>(searchModel);
-
-    	//any time text is inserted, removed, or its attributes change, refresh user-search results
-    	searchIn.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-    		public void insertUpdate(javax.swing.event.DocumentEvent e) {
-    			update();
-    		}
-    		public void removeUpdate(javax.swing.event.DocumentEvent e) {
-    			update();
-    		}
-    		public void changedUpdate(javax.swing.event.DocumentEvent e) {
-    			update();
-    		}
-    		private void update() {
-    			String input = searchIn.getText();
-
-    			ArrayList<String> matching = searchUserList(input);
-
-    			searchModel.clear();
-    			//    			searchModel.addElement("User1"); //placeholder
-    			for(String name : matching) {
-    				if(newChatUsers.contains(name)) {
-    					continue;
-    				}
-    				searchModel.addElement(name);
-    			}
-    		}
-    	});
-
-    	JButton createBtn = new JButton("Create");
-    	createBtn.addActionListener(e -> createNewChat(dlg, newChatUsers, nameIn));
-
-    	JPanel top = new JPanel(new GridLayout(3, 1, 5, 5));
-    	top.add(nameIn);
-    	top.add(usersIn);
-    	top.add(searchIn);
-    	dlg.add(top, BorderLayout.NORTH);
-    	dlg.add(new JScrollPane(searchList), BorderLayout.CENTER);
-    	dlg.add(createBtn, BorderLayout.SOUTH);
-    	dlg.setLocationRelativeTo(frame);
-    	dlg.setVisible(true);
-    	
-    	searchList.addListSelectionListener(
-    			e -> addUserToNewChat(searchList, searchModel, newChatUsers, searchIn, usersIn)
-    	);
+        JTextField nameIn = new JTextField();
+        nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
+        
+    
+        JTextField usersIn = new JTextField();
+        usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
+        usersIn.setEditable(false);
+    
+        JTextField searchIn = new JTextField();
+        searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
+    
+        DefaultListModel<String> searchModel = new DefaultListModel<>();
+        JList<String> searchList = new JList<>(searchModel);
+    
+        searchIn.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { update(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { update(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { update(); }
+    
+            private void update() {
+                String input = searchIn.getText().trim();
+                ArrayList<String> matching = searchUserList(input);
+    
+                searchModel.clear();
+                for (String name : matching) {
+                    if (!newChatUsers.contains(name)) {
+                        searchModel.addElement(name);
+                    }
+                }
+            }
+        });
+    
+        
+        searchList.addListSelectionListener(
+            e -> {
+                if (!e.getValueIsAdjusting()) {
+                    addUserToNewChat(searchList, searchModel, newChatUsers, searchIn, usersIn);
+                }
+            }
+        );
+    
+        JButton createBtn = new JButton("Create");
+        createBtn.addActionListener(e -> createNewChat(dlg, newChatUsers, nameIn));
+    
+        JPanel top = new JPanel(new GridLayout(3, 1, 5, 5));
+        top.add(nameIn);
+        top.add(usersIn);
+        top.add(searchIn);
+    
+        dlg.add(top, BorderLayout.NORTH);
+        dlg.add(new JScrollPane(searchList), BorderLayout.CENTER);
+        dlg.add(createBtn, BorderLayout.SOUTH);
+         GUITools.ColorGUIComponents(dlg);
+        dlg.setLocationRelativeTo(frame);
+        dlg.setVisible(true); 
     }
+    
     
     private void addUserToNewChat(JList<String> searchList, 
     		DefaultListModel<String> searchModel, 
@@ -350,6 +313,7 @@ public void appendMessage(String line) {
     	usersIn.setText(usersIn.getText() + "\n" + user);
     	searchModel.clear();
     	searchIn.setText("");
+        
     }
     
     private void createNewChat(JDialog dlg, ArrayList<String> newChatUsers, JTextField nameIn) {

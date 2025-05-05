@@ -1,4 +1,3 @@
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -12,7 +11,7 @@ public class DummyServer {
     public static void main(String[] args) {
         ServerSocket ss = null;
         try {
-            //dummy server setup
+            // Setup the server
             ss = new ServerSocket(42069);
             ss.setReuseAddress(true);
 
@@ -23,85 +22,86 @@ public class DummyServer {
                     + ss.getLocalPort()
                     + "\n");
 
-            Socket cs = ss.accept();
+            Socket cs = ss.accept();  // Accepting the client connection
             ObjectOutputStream out = new ObjectOutputStream(cs.getOutputStream());
-
-            //Sends a dummy object to initalize a stream. For some reason this is the only one that work?
-            //CHECK THIS LATER.
-            out.writeObject(null);
-
             ObjectInputStream in = new ObjectInputStream(cs.getInputStream());
 
-            //login test
+            // Dummy Account setup for login test
             Account test = new Account(Role.EMPLOYEE, "test", "password");
+
+            // Login loop: verify credentials
             while (true) {
                 Login login = (Login) in.readObject();
                 if (login.getUsername().equals("test") && login.getPassword().equals("password")) {
-                    //sends a success login
+                    // Sends success login response
                     Login responseLogin = new Login(LoginType.SUCCESS);
                     out.writeObject(responseLogin);
 
-                    //sending over clients account info
+                    // Send client account info
                     out.writeObject(test);
-                    break;
+                    break; // Exit the login loop once logged in
                 } else {
-                    //sends a failure login
+                    // Sends failure login response
                     Login responseLogin = new Login(LoginType.FAILURE);
                     out.writeObject(responseLogin);
                 }
             }
             System.out.println("<<< Login Worked >>>\n");
 
-            //test sending initial chats
-//            Account[] users = { 
-//                test,
-//                new Account(Role.EMPLOYEE, "Bob", "password"),
-//                new Account(Role.EMPLOYEE, "John", "password")
-//            };
+            // Initial chat setup
             String[] userNames = {
                 "test",
                 "Bob",
                 "John"
             };
+
             Message[] msgHistory = {
                 new Message("test msg 1", "test", "TestChat"),
                 new Message("test msg 2", "test", "TestChat")
             };
+
             List<Chat> testChatList = new ArrayList<Chat>();
             testChatList.add(new Chat(userNames, msgHistory, "TestChat"));
             testChatList.add(new Chat(userNames, msgHistory, "TestChat2"));
+
+            // Sending initial chats to the client
             out.writeObject(testChatList);
             out.flush();
 
-            //test sending all users names to client on login
+            // Send all usernames to the client
             out.writeObject(userNames);
 
-            //tests both new messages and new chats
-            while(true) {
+            // Main chat/message handling loop
+            while (true) {
                 Object objGot = in.readObject();
 
-                if(objGot instanceof Chat) { //for getting a new chat that was made
+                if (objGot instanceof Chat) {
+                    // Handle new chat creation
                     Chat newChat = (Chat) objGot;
-                	System.out.println("<<< Got A New Chat >>>\n");
-                	
-                	//add it to the server's list
-                	testChatList.add(newChat);
-                	
-                	//send that new chat back so the client can immediately display it
-                	out.writeObject(newChat);
-                	out.flush();
-                	System.out.println(">>> Sent CHAT_CREATED notification back to client\n");
+                    System.out.println("<<< Got A New Chat >>>\n");
 
-                } else { //for getting a new message
+                    // Add the new chat to the server's list
+                    testChatList.add(newChat);
+
+                    // Send the new chat to the client
+                    out.writeObject(newChat);
+                    out.flush();
+                    System.out.println(">>> Sent CHAT_CREATED notification back to client\n");
+
+                } else if (objGot instanceof Message) {
+                    // Handle new message
                     System.out.println("<<< Got A New Message >>>\n");
                     Message msg = (Message) objGot;
-                    // Message msg = (Message) in.readObject();
+
+                    // Process message (e.g., convert to uppercase)
                     Message responseMsg = new Message(
                             msg.getMsg().toUpperCase(),
                             msg.getAccountName(),
                             msg.getChatname()
                     );
                     out.writeObject(responseMsg);
+
+                    // If the message is "done", exit the loop
                     if (msg.getMsg().equals("done")) {
                         break;
                     }
@@ -115,9 +115,8 @@ public class DummyServer {
         } finally {
             try {
                 if (ss != null) {
-                    ss.close();
+                    ss.close();  // Close the server socket
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

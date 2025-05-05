@@ -2,7 +2,7 @@
 import java.awt.*;
 import javax.swing.*;
 
-public class LoginScreen
+public class LoginScreen extends Client
 {
     private JPanel mainPanel;
     private JFrame frame;
@@ -12,13 +12,11 @@ public class LoginScreen
     private JTextField userNameField;
     private JTextField passwordField;
     private JLabel messageLabel;
-    private Client client;
     private boolean success = false;
     private Runnable runOnSuccess;
 
-    public LoginScreen(Client client, Runnable runOnSuccess)
+    public LoginScreen(Runnable runOnSuccess)
     {
-        this.client = client;
         this.runOnSuccess = runOnSuccess;
         //Frame setup
         frame = new JFrame("Login Screen");
@@ -111,8 +109,10 @@ public class LoginScreen
 
     private void doLogin() {
 
-        String username = userNameField.getText();
-        String password = passwordField.getText();
+        String username = userNameField.getText().trim();
+        String password = passwordField.getText().trim();
+
+        super.startSocket();
     
         if (username == null || username.isEmpty()) 
         {
@@ -130,7 +130,8 @@ public class LoginScreen
             return;
         }
     
-         success = client.login(username, password);
+         success = super.login(username, password);
+       
 
         if(success)
         {
