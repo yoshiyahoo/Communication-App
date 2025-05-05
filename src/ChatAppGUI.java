@@ -35,6 +35,26 @@ public class ChatAppGUI extends Client {
 //    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
 //    }
     
+    // Called by the client's BackgroundHandlerCLient(view SwingUtilities.invokeLater) when a new Chat arrives from the server
+    public void addChatToList(String chatName) {
+    	//avoid duplicates
+    	if(!chatListModel.contains(chatName)) {
+    	chatListModel.addElement(chatName);
+    	}
+    	
+    	//select the newly added chat(this dont work maybe later fix bugs with it if possible)
+    	//int idx = chatListModel.indexOf(chatName);
+    	//chatList.setSelectedIndex(idx);
+    	//chatList.ensureIndexIsVisible(idx);
+    }
+    
+    //Called by client's BackgroundHandler Client(or locally on send)) to append a line of chat text to history area
+    public void appendMessage(String line) {
+    	historyArea.append(line);
+    }
+    
+    
+    
     public ChatAppGUI() {
 //    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
     	
@@ -235,22 +255,36 @@ public class ChatAppGUI extends Client {
     	}
     	
     	chatTitle.setText(chat);
-    	
+    	//wipe out old text
     	historyArea.setText("");
-    	for(Message msg : this.currentChat.getMsgHistory()) {
-    		historyArea.setText(
-    				historyArea.getText()
-    				+ "\n"
-    				+ msg.getAccountName()
-    				+ " "
-    				+ msg.getTime().getHour()
-    				+ ":"
-    				+ msg.getTime().getMinute()
-    				+ " >>> "
-    				+ msg.getMsg()
-    		);
-    	}
+    	//append each msg with newline
+//    	for(Message msg : this.currentChat.getMsgHistory()) {
+//    		historyArea.setText(
+//    				historyArea.getText()
+//    				+ "\n"
+//    				+ msg.getAccountName()
+//    				+ " "
+//    				+ msg.getTime().getHour()
+//    				+ ":"
+//    				+ msg.getTime().getMinute()
+//    				+ " >>> "
+//    				+ msg.getMsg()
+//    		);
     	
+    	//}
+    	for (Message msg : this.currentChat.getMsgHistory()) {
+    		  String line = String.format(
+    				  "%s %02d:%02d >>> %s%n",
+    				  msg.getAccountName(),
+    				  msg.getTime().getHour(),
+    				  msg.getTime().getMinute(),
+    				  msg.getMsg()
+    				  );
+    		  historyArea.append(line);
+    	  }
+    	  
+    	historyArea.setCaretPosition(historyArea.getDocument().getLength());
+    	//this dont work yet idk but it supposed to add users currently in gc to the right 
     	userListModel.clear();
     	for(String name : this.currentChat.getUsersNames()) {
     		userListModel.addElement(name);
@@ -272,6 +306,8 @@ public class ChatAppGUI extends Client {
     	super.sendMsg(newMsg);
     	
     	this.currentChat.addMessage(newMsg);
+    	
+        loadSelectedChat();
     	
     	messageField.setText("");
     }
@@ -358,7 +394,17 @@ public class ChatAppGUI extends Client {
     }
     
     private void createNewChat(JDialog dlg, ArrayList<String> newChatUsers, JTextField nameIn) {
-    	super.makeChat(newChatUsers.toArray(new String[0]), nameIn.getText());
+    	//super.makeChat(newChatUsers.toArray(new String[0]), nameIn.getText());
+    	String chatName = nameIn.getText().trim();
+    	if(chatName.isEmpty()) {
+    		return;
+    	}
+    	//build + send chat obj
+    	super.makeChat(newChatUsers.toArray(new String[0]), chatName);
+    	
+    	//immediately add to the UI
+    	addChatToList(chatName);
+
     	dlg.dispose();
     }
 }

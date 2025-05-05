@@ -267,27 +267,31 @@ public class Client {
     				//should block thread because its a blocking queue in request store
     				Object obj = requestStore.getIncoming();
     				
-    				//if object is a Message
-    				if(obj.getClass() == Message.class) {
-    					Message msg = (Message) obj;
-    					
-    					//this is ugly wrote while tired, might want to change later
-        				for(Chat chat : chats) {
-        					for(String user : chat.getUsersNames()) {
-        						if(user.equals(msg.getAccountName())) {
-        							chat.addMessage(msg);
-        						}
-        					}
-        				}
-        				
-        				continue;
-    				}
-
-    				//if object is a Chat
-    				if(obj.getClass() == Chat.class) {
+    				//Incoming Chat created
+    				if(obj instanceof Chat) {
     					Chat chat = (Chat) obj;
-    					
     					chats.add(chat);
+    					//update the UI on the EDT
+    					SwingUtilities.invokeLater(() ->
+    						display.addChatToList(chat.getChatName())
+    					);
+    					continue;
+    				}
+    				
+    				//Incoming Message
+    				if(obj instanceof Message) {
+    					Message msg = (Message) obj;
+    					//find the right Chat model and add it
+    					for(Chat chat : chats) {
+    						if(chat.getChatName().equals(msg.getChatname())) {
+    							chat.addMessage(msg);
+    							//now appends to the open history area
+    							SwingUtilities.invokeLater(() ->
+    								display.appendMessage(msg.getAccountName() + ": " + msg.getMsg() + "\n"));
+    							break;
+    						}
+    					}
+    					continue;
     				}
     			}
 
@@ -337,6 +341,7 @@ public class Client {
 				try {
 					//should block thread because its a blocking queue in request store
 					out.writeObject(requestStore.getOutgoing());
+					out.flush();
 					
 				} catch (IOException e) {
 //					System.out.println("Socket closed");
