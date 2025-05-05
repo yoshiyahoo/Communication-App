@@ -39,7 +39,6 @@ public class Client {
 		} finally {
 			try {
 				socket.close();
-				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -131,8 +130,7 @@ public class Client {
                 loginSucceeded = true;
                 
                 //gets account info from server if the login was successful
-				// No we dont? -Josiah
-                // account = (Account) in.readObject();
+                account = (Account) in.readObject();
             } 
             else 
             {
@@ -256,11 +254,13 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
+					System.out.println("Reading messages!");
 					Object incomingObj = in.readObject();
 					requestStore.addToIncoming(incomingObj);
 					
 				} catch (InterruptedException | ClassNotFoundException | IOException e) {
 					e.printStackTrace();
+					return; // If things break, please return
 				}
 			}
 		}

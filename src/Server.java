@@ -143,24 +143,17 @@ public class Server {
             Login login;
             try {
                 login = (Login) this.in.readObject();
-                System.out.println(login);
-                // If there is any exception to the protocol, drop the client
-            } catch (IOException | ClassNotFoundException e) {
-                return;
-            }
-
-            // The client will infer that it logged in or not
-            try {
-                if (!super.loginHandling(login)) {
-                    // close the thread
+                while (!super.loginHandling(login)) {
                     System.out.println("Login for User [" + login.getUsername() + "] Failed");
                     out.writeObject(new Login(LoginType.FAILURE));
-                    return;
-                }
+                    login = (Login) this.in.readObject();
+                };
                 System.out.println("Login for User [" + login.getUsername() + "] Succeeded");
                 out.writeObject(new Login(LoginType.SUCCESS));
-            } catch (IOException e) {
-                // Errors, disconnect the client
+                out.writeObject(data.getAccount(login.getUsername())); // Also send the client the account object
+
+                // If there is any exception to the protocol, drop the client
+            } catch (IOException | ClassNotFoundException e) {
                 return;
             }
 
@@ -187,10 +180,12 @@ public class Server {
 
             // loop to handle switching chats/sending messages/stuff like that
             while (true) {
+                Object test = null;
                 Message msg = null;
                 Chat newChat = null;
                 try {
-                    msg = (Message) this.in.readObject();
+                    test = this.in.readObject();
+                    System.out.println(test.toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                     return;
