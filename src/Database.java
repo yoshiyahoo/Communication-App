@@ -67,11 +67,7 @@ public class Database {
             String chatName = file.getName().substring(0, dotIndex);
 
             String[] userList = lines.get(0).split(",");
-            Account[] acctList = Arrays.stream(userList)
-            		.map(userName -> acctNameObjMap.get(userName))
-            		.toArray(Account[]::new);
-            
-            
+
             // TODO do we need a chat id anymore?
             Message[] msgHistory = lines.stream()
                 .skip(1)
@@ -84,7 +80,7 @@ public class Database {
                 ))
                 .toArray(Message[]::new);
 
-            chatNameObjMap.put(chatName, new Chat(acctList, msgHistory, chatName));
+            chatNameObjMap.put(chatName, new Chat(userList, msgHistory, chatName));
 
             // add chat to userChatMap for each user
             for(String user : userList) {
@@ -158,10 +154,7 @@ public class Database {
     public List<Chat> getChats(String accountName) {
         HashSet<String> chatNames = userChatMap.get(accountName);
         if (chatNames == null) {
-            //TODO.todo("Handle the case where no chats are found");
-            Account[] lonelyUser = new Account[]{
-                    this.getAccount(accountName)
-            };
+            String[] lonelyUser = new String[] { accountName };
             Chat emptyChat = new Chat(lonelyUser, accountName);
             return List.of(emptyChat);
         }
@@ -180,10 +173,6 @@ public class Database {
      * @throws IOException
      */
     public void addChat(String[] userList, String chatName) throws IOException {
-        Account[] acctList = Arrays.stream(userList)
-        		.map(userName -> acctNameObjMap.get(userName))
-        		.toArray(Account[]::new);
-    	
     	// Save to local files
         Path filePath = Path.of(CHATS_DIR + chatName + ".txt");
 
@@ -193,7 +182,7 @@ public class Database {
                 StandardOpenOption.CREATE
         );
 
-        Chat toAdd = new Chat(acctList, new Message[0], chatName);
+        Chat toAdd = new Chat(userList, new Message[0], chatName);
         chatNameObjMap.put(chatName, toAdd);
         
         // add chat name for each user
