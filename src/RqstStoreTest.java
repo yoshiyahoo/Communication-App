@@ -32,7 +32,7 @@ public class RqstStoreTest{
 		}, 100, TimeUnit.MILLISECONDS);
 		
 		//Should unblock and return the same Message
-		Object received = store.getIncoming();
+		Message received =  (Message) store.getIncoming();
 		assertSame(msg, received, "getIncoming() must return exactly the Message put");
 	}
 	
@@ -52,7 +52,7 @@ public class RqstStoreTest{
 		}, 100, TimeUnit.MILLISECONDS);
 		
 		//Should unblock and return the same Message
-		Object received = store.getOutgoing();
+		Message received = (Message) store.getOutgoing();
 		assertSame(msg, received, "getOutgoing() must return exactly the Message put");
 	}
 }

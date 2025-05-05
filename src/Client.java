@@ -306,6 +306,7 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
+					System.out.println("Reading messages!");
 					Object incomingObj = in.readObject();
 					requestStore.addToIncoming(incomingObj);
 					

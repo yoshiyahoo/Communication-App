@@ -23,7 +23,6 @@ public class GUI extends Client{
 			System.out.print("Password >>> ");
 			password = this.scan.nextLine();
 			success = super.login(username, password);
-
 		} while(!success);
 
 		System.out.println("\n=== Login Successful ===");
@@ -140,7 +139,9 @@ public class GUI extends Client{
 					Message msg = new Message(text, super.getUserAccount().getName(), currentChat.getChatName());
 					
 					super.sendMsg(msg);
-					
+
+					// Save the message
+					currentChat.addMessage(msg);
 					break;
 				case 5:
 					//maybe should have a logout method on client and server
