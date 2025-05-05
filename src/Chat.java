@@ -26,14 +26,6 @@ public class Chat implements Serializable {
     	this.chatName = chatName;
     }
 
-    public void addUser(String accountName) {
-    	this.usersNames.add(accountName);
-    }
-
-    public void removeUser(String accountName) {
-    	this.usersNames.remove(accountName);
-    }
-    
     public String getChatName() {
     	return this.chatName;
     }
@@ -47,6 +39,6 @@ public class Chat implements Serializable {
     }
 
     public Message[] getMsgHistory() {
-    	return this.msgHistory.toArray(new Message[0]);
+    	return this.msgHistory.toArray(Message[]::new);
     }
 }
