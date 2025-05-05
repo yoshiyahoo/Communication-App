@@ -35,9 +35,9 @@ public class ChatAppGUI extends Client {
     private Chat currentChat;
     
     // uncomment to test
-    public static void main(String [] args) {
-    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
-    }
+//    public static void main(String [] args) {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+//    }
     
     // Called by the client's BackgroundHandlerCLient(view SwingUtilities.invokeLater) when a new Chat arrives from the server
     public void addChatToList(String chatName) {
