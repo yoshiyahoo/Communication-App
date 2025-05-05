@@ -71,16 +71,26 @@ public class DummyServer {
             testChatList.add(new Chat(userNames, msgHistory, "TestChat"));
             testChatList.add(new Chat(userNames, msgHistory, "TestChat2"));
             out.writeObject(testChatList);
+            out.flush();
 
             //test sending all users names to client on login
             out.writeObject(userNames);
 
             //tests both new messages and new chats
-            while (true) {
-                var objGot = in.readObject();
+            while(true) {
+                Object objGot = in.readObject();
 
-                if (objGot.getClass().equals(Chat.class)) { //for getting a new chat that was made
-                    System.out.println("<<< Got A New Chat >>>\n");
+                if(objGot instanceof Chat) { //for getting a new chat that was made
+                    Chat newChat = (Chat) objGot;
+                	System.out.println("<<< Got A New Chat >>>\n");
+                	
+                	//add it to the server's list
+                	testChatList.add(newChat);
+                	
+                	//send that new chat back so the client can immediately display it
+                	out.writeObject(newChat);
+                	out.flush();
+                	System.out.println(">>> Sent CHAT_CREATED notification back to client\n");
 
                 } else { //for getting a new message
                     System.out.println("<<< Got A New Message >>>\n");
