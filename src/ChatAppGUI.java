@@ -205,14 +205,15 @@ public class ChatAppGUI extends Client {
     	super.startSocket();
     	
     	boolean success = super.login(user, pass);
-    	
+
     	if(success) {
+			System.out.println("Successfully logged in!");
     		currentUsername = user;
     		userLabel.setText(currentUsername);
     		cards.show(root, "chat");
     		
     		loginError.setText("");
-    		
+
     		super.getChatFromServer();
     		for(Chat chat : super.getChats()) {
     			this.chatListModel.addElement(chat.getChatName());

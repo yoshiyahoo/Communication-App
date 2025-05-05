@@ -156,9 +156,14 @@ public class Database {
         if (chatNames == null) {
             String[] lonelyUser = new String[] { accountName };
             Chat emptyChat = new Chat(lonelyUser, accountName);
+            try {
+                this.addChat(lonelyUser, accountName);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             return List.of(emptyChat);
         }
-        List<Chat> chats = List.of();
+        List<Chat> chats = new ArrayList<>();
         for (String chat : chatNames) {
             chats.add(getChat(chat));
         }

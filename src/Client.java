@@ -216,7 +216,6 @@ public class Client {
     public static void getUserNamesFromServer() {
     	try {
     		userList = (String[]) in.readObject();
-			
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
 		}

@@ -28,6 +28,7 @@ public class Server {
     	initialStartUp();
     	while(true) {
     		Socket client = server.accept();
+            // Start the client thread
     		Thread clientThread = new Thread(new BackgroundHandlerServer(client));
     		clientThread.start();
     	}
@@ -53,6 +54,9 @@ public class Server {
 
         // 5. (Optional) Load server config or resources
         // load config file if any
+
+        // Start the RqstHandler thread
+        new Thread(new RqstHandler()).start();
     }
 
     /**
@@ -62,7 +66,7 @@ public class Server {
      * @return True if login is in database, False otherwise
      */
     // TODO send login verification here?
-    private static boolean loginHandling(Login login) {
+    protected static boolean loginHandling(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
     	return acct != null && login.getPassword().equals(acct.getPassword());
@@ -75,7 +79,7 @@ public class Server {
      * @param chatName Desired chat
      * @throws IOException 
      */
-    private void sendMsgHistory(String userName, String chatName) throws IOException {
+    protected void sendMsgHistory(String userName, String chatName) throws IOException {
     	Message[] toSend = data.getChat(chatName).getMsgHistory();
     	
     	ObjectOutputStream clientStream = clients.get(userName).out;
@@ -88,7 +92,7 @@ public class Server {
      * @param userName recipient of the userList 
      * @throws IOException 
      */
-    private void sendAllUsers(String userName) throws IOException {
+     protected void sendAllUsers(String userName) throws IOException {
     	String[] userNames = data.getAccounts().stream()
     			.map(acct -> acct.getName())
     			.toArray(String[]::new);
@@ -105,7 +109,7 @@ public class Server {
      * @throws IOException 
      */
     // TODO we got sendmsghist too, should we keep both?
-    private void sendChat(String userName, String chatName) throws IOException {
+    protected void sendChat(String userName, String chatName) throws IOException {
     	Chat toSend = data.getChat(chatName);
     	
     	ObjectOutputStream clientStream = clients.get(userName).out;
@@ -119,7 +123,7 @@ public class Server {
      * @param msg message to send
      * @throws IOException
      */
-    private void sendMsg(String userName, Message msg) throws IOException {
+    protected void sendMsg(String userName, Message msg) throws IOException {
     	ObjectOutputStream clientStream = clients.get(userName).out;
     	clientStream.writeObject(msg);
     }
@@ -129,7 +133,7 @@ public class Server {
      * 
      * @param msg message to queue
      */
-    private void pushStore(Message msg) {
+    protected void pushStore(Message msg) {
     	try {
     	    requestStore.addToIncoming(msg);
     	} catch (InterruptedException e) {
@@ -142,7 +146,7 @@ public class Server {
      * 
      * @return message obj from the store
      */
-    private Message popStore() {
+    protected Message popStore() {
     	try {
 			Message msg = (Message) requestStore.getIncoming();
 			return msg;
@@ -159,11 +163,11 @@ public class Server {
      * @param chatName name of desired chat
      * @return chat obj with its name = chatName
      */
-    private Chat getChat(String chatName) {
+    protected Chat getChat(String chatName) {
     	return data.getChat(chatName);
     }
     
-    private void logoutHandler() {
+    protected void logoutHandler() {
         TODO.todo("close client connections, remove client from map, end thread");
     }
 
@@ -184,29 +188,39 @@ public class Server {
     }
 
     // to broadcast messages in rqstStore
-    private static class RqstHandler implements Runnable {
-        private final Server server;
+    private static class RqstHandler extends Server implements Runnable {
+        //private final Server server;
 
-	    public RqstHandler(Server server) {
-	        this.server = server;
+	    public RqstHandler() {
+	        //this.server = server;
 	    }
 	    
 	    @Override
 	    public void run() {
 	    	while(true) {
-	    		Message msg = server.popStore();
+	    		Message msg = popStore();
 	    		if(msg == null) continue;
 	    		
-	    		Chat c = server.getChat(msg.getChatname());
-	    		String[] ul = c.getUsersNames();
+	    		Chat c = getChat(msg.getChatname());
+
+                // save the current message
+                try {
+                    data.saveMessage(msg);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                String[] ul = c.getUsersNames();
 	    		
 	    		// broadcast to active users in ul
 	    		for(String userName : ul) {
 	    			// skip user if they aren't online
 	    			if(!Server.clients.containsKey(userName)) continue;
+
+                    // don't resend the same user the message he sent
+                    if(msg.getAccountName().equals(userName)) continue;
 	    			
 	    			try {
-						server.sendMsg(userName, msg);
+						sendMsg(userName, msg);
 					} catch (IOException e) {
 						// client just disconnected
 						if (e instanceof EOFException) {
@@ -226,101 +240,70 @@ public class Server {
 	    }
     }
     
-    // TODO a lil hard to read, boss
-    // TODO why extend? class has access to server attributes/methods. 
     // TODO could hold a reference to main server
-    private static class BackgroundHandlerServer implements Runnable {
+    private static class BackgroundHandlerServer extends Server implements Runnable {
         private ObjectOutputStream out;
         private ObjectInputStream in;
-        private Socket conn;
+        private final Socket conn;
+        private String userKey;
         public BackgroundHandlerServer(Socket conn) {
             this.conn = conn;
         }
         
         @Override
         public void run() {
-            // Gather the output stream information
+            // Perform the initial login of the client
             try {
+                // Get the streams
                 this.out = new ObjectOutputStream(conn.getOutputStream());
                 this.in = new ObjectInputStream(conn.getInputStream());
-            } catch (IOException e) {
-                // Close the thread and stop handling this client data
-                return;
-            }
 
-            // Process the login
-            Login login;
-            try {
-                login = (Login) this.in.readObject();
-                while (!loginHandling(login)) {
+                // Grab the login object from the client and check credentials
+                Login login = (Login) this.in.readObject();
+                if (!loginHandling(login)) {
                     System.out.println("Login for User [" + login.getUsername() + "] Failed");
                     out.writeObject(new Login(LoginType.FAILURE));
-                    login = (Login) this.in.readObject();
+                    // Close connection with the client
+                    return;
                 };
                 System.out.println("Login for User [" + login.getUsername() + "] Succeeded");
                 out.writeObject(new Login(LoginType.SUCCESS));
                 out.writeObject(data.getAccount(login.getUsername())); // Also send the client the account object
+                // Add the client to the list of connected clients
+                userKey = login.getUsername();
+                clients.put(userKey, this);
 
-                // If there is any exception to the protocol, drop the client
-            } catch (IOException | ClassNotFoundException e) {
-                return;
-            }
-
-            System.out.println("Login for " + login.getUsername() + " Succeeded");
-
-            // Send chats to the Client
-            List<Chat> chats = data.getChats(login.getUsername());
-
-            try {
+                // Send the client all the chats they need
+                List<Chat> chats = data.getChats(login.getUsername());
                 this.out.writeObject(chats);
-            } catch (IOException e) {
-                // close the thread
+
+                // Send all usernames to the client
+                sendAllUsers(userKey);
+            } catch (IOException | ClassNotFoundException e) {
+                // Close the thread and stop handling this client data
                 return;
             }
 
             // loop to handle switching chats/sending messages/stuff like that
             while (true) {
-                Object test = null;
-                Message msg = null;
-                Chat newChat = null;
                 try {
-                    test = this.in.readObject();
-                    System.out.println(test.toString());
-                } catch (IOException e) {
-                    return;
-                } catch (ClassNotFoundException e) {
-                    // Do nothing here, it might not be over yet
-                }
-                // The client could send over a chat object to create a new chat
-                try {
-                    newChat = (Chat) this.in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    // At this point, we shouldn't expect anything good from the client
-                    return;
-                }
-
-                if (msg != null) {
-                    try {
-                        data.saveMessage(msg);
-                        // Tell the other clients to get a new message
-                        for (String user : newChat.getUsersNames()) {
-                            clients.get(user).out.writeObject(msg);
+                    Object obj = this.in.readObject();
+                    switch (obj) {
+                        case Message msg -> {
+                            pushStore(msg);
                         }
-                    } catch (IOException e) {
-                        // Stop the thread if it's not done
-                        return;
+                        case Chat newChat -> {
+                            String[] usernames = newChat.getUsersNames();
+                            data.addChat(usernames, newChat.getChatName());
+                        }
+                        case null, default -> {
+                            clients.remove(userKey);
+                            return;
+                        }
                     }
-                }
-                else if (newChat == null) {
-                    // move on to the next iteration
-                    continue;
-                }
-
-                String[] usernames = newChat.getUsersNames();
-                try {
-                    data.addChat(usernames, newChat.getChatName());
-                    TODO.todo("figure out a way to get the chats to all new users, possible to use observers");
-                } catch (IOException e) {
+                } catch (IOException | ClassNotFoundException e) {
+                    // Drop the client, no mercy
+                    clients.remove(userKey);
                     return;
                 }
             }

@@ -1,0 +1,2 @@
+employee,user1,password1
+admin,user2,password2
