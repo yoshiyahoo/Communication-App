@@ -152,7 +152,20 @@ public class Database {
      * @return List of chats needed
      */
     public List<Chat> getChats(String accountName) {
+    	 List<Chat> chats = new ArrayList<>();
+    	
+    	 // if user is admin,just get all da chats
+    	if(acctNameObjMap.get(accountName).getRole() == Role.ADMINISTRATOR) {
+    		for (Chat chat : chatNameObjMap.values()) {
+                chats.add(chat);
+            }
+    		
+    		return chats;
+    	}
+    	
         HashSet<String> chatNames = userChatMap.get(accountName);
+        
+        // TODO FORCE making chat b/c client freaks out when user gets no chats
         if (chatNames == null) {
             String[] lonelyUser = new String[] { accountName };
             Chat emptyChat = new Chat(lonelyUser, accountName);
@@ -163,7 +176,11 @@ public class Database {
             }
             return List.of(emptyChat);
         }
+<<<<<<< HEAD
         List<Chat> chats = new ArrayList<>();
+=======
+
+>>>>>>> 1427855 (admins can see all chats now)
         for (String chat : chatNames) {
             chats.add(getChat(chat));
         }
