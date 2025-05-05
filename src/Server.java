@@ -1,5 +1,6 @@
 import java.util.Arrays;
 import java.util.List;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -202,9 +203,19 @@ public class Server {
 	    		// broadcast to active users in ul
 	    		for(Account acct : ul) {
 	    			String userName = acct.getName();
+	    			// skip user if they aren't online
+	    			if(!Server.clients.containsKey(userName)) continue;
+	    			
 	    			try {
 						server.sendMsg(userName, msg);
 					} catch (IOException e) {
+						// client just disconnected
+						if (e instanceof EOFException) {
+							Server.clients.remove(userName);
+							continue;
+						}
+							
+							
 						String errStr = "Broadcast thread failed: " + 
 								msg.toString() + 
 								" | " + userName;
