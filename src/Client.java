@@ -70,6 +70,15 @@ public class Client {
 			//here if socket failed to close properly
 		}
     }
+    
+    /**
+     * Just cleans up chats, userList, and account on a logout
+     */
+    public static void cleanUpOnLogout() {
+    	chats = null;
+    	userList = null;
+    	account = null;
+    }
 
     /**
      * For adding new messages to the outgoing queue
