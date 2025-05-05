@@ -238,6 +238,7 @@ public class ChatAppGUI extends Client {
 //    	System.out.println("Threads should have stopped");
 //    	System.exit(0);
     	
+    	super.cleanUpOnLogout();
     	super.closeSocket();
     } 
     
