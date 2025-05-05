@@ -1,11 +1,16 @@
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
@@ -41,7 +46,8 @@ public class Server {
 
         // 2. Print startup message
         // print "Server started on port " + PORT
-        System.out.println("Server started on Port: " + PORT);
+        System.out.println("Server started on IP: " + getHostAddr() + 
+        		", Port: " + PORT);
 
         // 3. (Optional) Initialize data structures for clients
         // create List or Map to track connected clients
@@ -58,6 +64,30 @@ public class Server {
         // Start the RqstHandler thread
         new Thread(new RqstHandler()).start();
     }
+    
+    /**
+     * Return the host machines ip address. Should only be used on init
+     * 
+     * @return the IPv4 address of the system running server
+     * @throws SocketException
+     */
+    private static String getHostAddr() throws SocketException {
+    	Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+    	while (interfaces.hasMoreElements()) {
+    	    NetworkInterface ni = interfaces.nextElement();
+    	    if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) continue;
+
+    	    Enumeration<InetAddress> addresses = ni.getInetAddresses();
+    	    while (addresses.hasMoreElements()) {
+    	        InetAddress addr = addresses.nextElement();
+    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
+    	        	return addr.getHostAddress();
+    	        }
+    	    }
+    	}
+    	
+    	return null;
+    }
 
     /**
      * Compare a login obj with login info on the database 
@@ -69,7 +99,8 @@ public class Server {
     protected static boolean loginHandling(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
-    	return acct != null && login.getPassword().equals(acct.getPassword());
+    	return acct != null && login.getPassword().equals(acct.getPassword()) &&
+    			clients.containsKey(login.getUsername());
     }
 
     /**
