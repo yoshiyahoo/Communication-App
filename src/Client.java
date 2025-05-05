@@ -1,4 +1,5 @@
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,15 +52,10 @@ public class Client {
     	System.exit(0); //for cleaning up and running thread
     }
     
-    public static void startSocket() {
-    	try {
-			socket = new Socket("localhost", 42069);
-			out = new ObjectOutputStream(socket.getOutputStream());
-    		in = new ObjectInputStream(socket.getInputStream());
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+    public static void startSocket(String host) throws UnknownHostException, IOException {
+		socket = new Socket(host, 42069);
+		out = new ObjectOutputStream(socket.getOutputStream());
+		in = new ObjectInputStream(socket.getInputStream());
     }
     
     public static void closeSocket() {

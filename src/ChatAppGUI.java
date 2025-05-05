@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.net.UnknownHostException;
 /*
  * Skeleton of the ChatAppGUI that needs to be hooked up to the methods, made based on the Figma Design
  */
@@ -14,6 +16,7 @@ public class ChatAppGUI extends Client {
     // Login components
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
+    private JTextField addressField = new JTextField();
     private JLabel loginError = new JLabel();
     private String currentUsername;
     private JLabel userLabel; //for adding on top of the add chat button
@@ -31,9 +34,10 @@ public class ChatAppGUI extends Client {
     private JLabel chatError;
     private Chat currentChat;
     
-//    public static void main(String [] args) {
-//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
-//    }
+    // uncomment to test
+    public static void main(String [] args) {
+    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+    }
     
     // Called by the client's BackgroundHandlerCLient(view SwingUtilities.invokeLater) when a new Chat arrives from the server
     public void addChatToList(String chatName) {
@@ -89,6 +93,9 @@ public class ChatAppGUI extends Client {
     	passwordField.setColumns(15);
     	passwordField.setMaximumSize(passwordField.getPreferredSize());
     	passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	addressField.setColumns(15);
+    	addressField.setMaximumSize(passwordField.getPreferredSize());
+    	addressField.setAlignmentX(Component.CENTER_ALIGNMENT);
     	
     	JLabel header = new JLabel("Enter Credentials");
     	header.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -106,6 +113,12 @@ public class ChatAppGUI extends Client {
     	panel.add(passLabel);
     	panel.add(passwordField);
     	panel.add(Box.createVerticalStrut(15));
+    	
+    	JLabel addressLabel = new JLabel("Server Address:");
+    	addressLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(addressLabel);
+    	panel.add(addressField);
+    	panel.add(Box.createVerticalStrut(10));
     	
     	JButton loginBtn = new JButton("Login");
     	loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -201,10 +214,18 @@ public class ChatAppGUI extends Client {
     private void doLogin() {
     	String user = usernameField.getText();
     	String pass = new String(passwordField.getPassword());
+    	String address = addressField.getText();
     	
-    	super.startSocket();
+    	boolean success = true;
     	
-    	boolean success = super.login(user, pass);
+    	try {
+			super.startSocket(address);
+		} catch (Exception e) {
+			success = false;
+		}
+    	
+    	success = success && super.login(user, pass);
+    	
     	
     	if(success) {
     		currentUsername = user;
