@@ -8,7 +8,6 @@ The object is meant to be sent over the network
 You can only add messages, you can't remove
  */
 public class Chat implements Serializable {
-    private List<Account> users; 
     private List<Message> msgHistory;
     private String chatName;
     private List<String> usersNames;
@@ -26,34 +25,17 @@ public class Chat implements Serializable {
     	this.msgHistory = new ArrayList<>(Arrays.asList(msgHistory));
     	this.chatName = chatName;
     }
-    
-    // Additional constructor for creating new chat
-    public Chat(Account[] users, String chatName) {
-    	this.users = new ArrayList<>(Arrays.asList(users));
-    	this.chatName = chatName;
-    	this.msgHistory = new ArrayList<Message>();
+
+    public void addUser(String accountName) {
+    	this.usersNames.add(accountName);
     }
 
-    public Chat(Account[] users, Message[] msgHistory, String chatName) {
-    	this.users = new ArrayList<>(Arrays.asList(users));
-    	this.msgHistory = new ArrayList<>(Arrays.asList(msgHistory));
-    	this.chatName = chatName;
-    }
-
-    public void addUser(Account account) {
-    	this.users.add(account);
-    }
-
-    public void removeUser(Account account) {
-    	this.users.remove(account);
+    public void removeUser(String accountName) {
+    	this.usersNames.remove(accountName);
     }
     
     public String getChatName() {
     	return this.chatName;
-    }
-    
-    public Account[] getUsers() {
-    	return this.users.toArray(new Account[0]);
     }
     
     public String[] getUsersNames() {

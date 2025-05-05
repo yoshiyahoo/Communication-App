@@ -254,7 +254,7 @@ public class Server {
             Login login;
             try {
                 login = (Login) this.in.readObject();
-                while (!super.loginHandling(login)) {
+                while (!loginHandling(login)) {
                     System.out.println("Login for User [" + login.getUsername() + "] Failed");
                     out.writeObject(new Login(LoginType.FAILURE));
                     login = (Login) this.in.readObject();
