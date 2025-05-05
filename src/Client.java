@@ -1,10 +1,6 @@
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import javax.swing.SwingUtilities;
 
@@ -14,11 +10,8 @@ public class Client {
     private static Socket socket = null;
     private static ObjectOutputStream out;
     private static ObjectInputStream in;
-    private Queue<Message> offlineQ = new LinkedList<>(); // need to rename QueueForOfflineMessages in Design
     private static Account account;
-    private Message msg; // why do we need a message here?
     private static String[] userList;
-//    private static GUI display;
     private static ChatAppGUI display;
     private static RqstStore requestStore;
     private static List<Chat> chats;
@@ -27,9 +20,6 @@ public class Client {
     private static Thread incoming;
 
     public static void main(String[] args) {
-    	//remove later
-    	System.out.println("Running Client\n");
-    	
     	try {
     		//makes the Request Store object
     		requestStore = new RqstStore();
@@ -37,20 +27,24 @@ public class Client {
     		//login and gets chat info, then starts background thread, and goes to main screen
         	display();
         	
-        	//blocks main thread until GUI Thread is over
+        	//blocks main thread until other threads are done
         	Thread.currentThread().join();
     		
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			//here if main thread was interrupted during .join()
 			
 		} finally {
 			closeSocket();
 		}
     	
-    	System.out.println("\nClient Done");
-    	System.exit(0); //for cleaning up and running thread
+    	//for cleaning up any running threads
+    	//threads should already be done before here but just for safety
+    	System.exit(0);
     }
     
+    /**
+     * For starting socket and in/out socket streams
+     */
     public static void startSocket() {
     	try {
 			socket = new Socket("localhost", 42069);
@@ -58,10 +52,13 @@ public class Client {
     		in = new ObjectInputStream(socket.getInputStream());
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			//here if socket/streams failed to start properly
 		}
     }
     
+    /**
+     * For safely closing socket
+     */
     public static void closeSocket() {
     	try {
     		if(socket != null) {
@@ -70,15 +67,16 @@ public class Client {
     		}
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			//here if socket failed to close properly
 		}
     }
 
-    // why is this method needed?
-    //public Queue<Message> getMessageQueue() {
-    //	return offlineQ;
-    //}
-
+    /**
+     * For adding new messages to the outgoing queue
+     * Client --> Server
+     * 
+     * @param msg
+     */
     public void sendMsg(Message msg) {
     	try {
     		requestStore.addToOutGoing(msg); //hand off to outgoing queue
@@ -86,12 +84,6 @@ public class Client {
     		System.out.println("Interrupted while sending message: " + e.getMessage());
     		Thread.currentThread().interrupt();
     	}
-    }
-    
-    public void recieveMsg(Message msg) {
-    	//store message for later
-    	//putting something into the queue
-    	//System.out.println("[" + msg.getTime() + "] " + msg.getAccountName() + " in " + msg.getChatname() + ": " + msg.getMsg());
     }
 
     /**
@@ -122,32 +114,15 @@ public class Client {
     }
 
     public static void display() {
-//    	display = new GUI();
-//    	
-//    	display.loginScreen();
-    	
     	display = new ChatAppGUI();
     	
     	SwingUtilities.invokeLater(() -> display.init());
-    	
-//    	try {
-//			Thread.currentThread().wait();
-//			
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-    	
-//    	getChatFromServer();
-//    	
-//    	getUserNamesFromServer();
-		
-//		new Thread(new BackgroundHandlerClient(), "Background Message Handler").start();
-//		new Thread(new IncomingHandler(), "Incoming Chat Handler").start();
-//		new Thread(new OutgoingHandler(), "Outgoing Chat Handler").start();
-    	
-//    	display.mainScreen();
     }
     
+    /**
+     * User after startSocket()
+     * Handles starting background, incoming, and outgoing threads
+     */
     public static void startClientThreads() {
     	background = new Thread(new BackgroundHandlerClient(), "Background Message Handler");
 		incoming = new Thread(new IncomingHandler(), "Incoming Chat Handler");
@@ -158,12 +133,23 @@ public class Client {
 		outgoing.start();
     }
     
+    /**
+     * Use before closeSocket()
+     * Stops background threads for safe socket close
+     */
     public static void stopClientThreads() {
+    	//only need to stop background thread with interrupt because
+    	//outgoing and incoming stop on socket close (IOException handling)
     	background.interrupt();
-//    	incoming.interrupt(); //doesn't need to be interrupted because gets handled when socket closes
-//    	outgoing.interrupt();
     }
 
+    /**
+     * For handling user login
+     * 
+     * @param username	String username tied to users account
+     * @param password	String password tied to users account
+     * @return			boolean that indicates whether or not login was successful
+     */
     public boolean login(String username, String password) {
         boolean loginSucceeded = false;
     
@@ -179,19 +165,14 @@ public class Client {
     
             if (loginResponse.getLoginStatus() == LoginType.SUCCESS) 
             {
-//                System.out.println("Login successful!");
                 loginSucceeded = true;
                 
                 //gets account info from server if the login was successful
                 account = (Account) in.readObject();
-            } 
-//            else 
-//            {
-//                System.out.println("Login failed! Please try again.");
-//            }
+            }
             
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        	//if here probably because socket closed when waiting for server objects
         }
     
         return loginSucceeded;
@@ -201,7 +182,8 @@ public class Client {
     /**
      * Called by main for getting chat list for clients account after login.
      */
-    public static void getChatFromServer() {
+    @SuppressWarnings("unchecked")
+	public static void getChatFromServer() {
     	try {
     		chats = (List<Chat>) in.readObject();
 			
@@ -240,6 +222,12 @@ public class Client {
     	return temp;
     }
 
+    /**
+     * For sending new chat info to server and adds new chat to clients chat list locally
+     * 
+     * @param users			String[] of all users in new chat
+     * @param chatname		String for the name of the new chat
+     */
     public void makeChat(String[] users, String chatname) {
     	Chat newChat = new Chat(users, chatname);
     	
@@ -253,7 +241,9 @@ public class Client {
 		}
     }
 
-    //handles the objects in request store getIncoming()
+    /**
+     * handles the objects in request store getIncoming()
+     */
     private static class BackgroundHandlerClient implements Runnable {
 
     	public BackgroundHandlerClient() {}
@@ -261,7 +251,7 @@ public class Client {
     	@Override
     	public void run() {
     		try {
-    			//handles incoming messages from client request store queue
+    			//handles incoming messages/chats from client request store queue
     			while(true) {
     				//should block thread because its a blocking queue in request store
     				Object obj = requestStore.getIncoming();
@@ -295,12 +285,14 @@ public class Client {
     			}
 
     		} catch (InterruptedException e) {
-//    			System.out.println("Background was interruped");
+    			//here when thread is interrupted before closing the socket
     		}
     	}
     }
     
-    //puts the incoming objects into request store addToIncoming()
+    /**
+     * puts the incoming objects into request store addToIncoming()
+     */
     private static class IncomingHandler implements Runnable {
     	
     	public IncomingHandler() {}
@@ -309,19 +301,19 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
-//					System.out.println("Reading messages!");
+					//should block thread will wait for object to add to queue
 					Object incomingObj = in.readObject();
 					requestStore.addToIncoming(incomingObj);
 					
 				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+					//here is bad object comes in from socket stream
 					
 				} catch (InterruptedException e) {
-//					System.out.println("Incoming was interruped");
+					//if thread gets interrupted while waiting for queue
 					break;
 					
 				} catch (IOException e) {
-//					System.out.println("Socket closed");
+					//if the socket closes break out of loop
 					break;
 				}
 			}
@@ -329,7 +321,9 @@ public class Client {
     	
     }
     
-    //sends objects from request store getOutgoing() to server
+    /**
+     * sends objects from request store getOutgoing() to server
+     */
     private static class OutgoingHandler implements Runnable {
     	
     	public OutgoingHandler() {}
@@ -343,11 +337,11 @@ public class Client {
 					out.flush();
 					
 				} catch (IOException e) {
-//					System.out.println("Socket closed");
+					//if the socket closes break out of loop
 					break;
 					
 				} catch (InterruptedException e) {
-//					System.out.println("outgoing was interruped");
+					//if thread gets interrupted while waiting for queue
 					break;
 				}
 			}
