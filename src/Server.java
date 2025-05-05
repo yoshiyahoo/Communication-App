@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
-	// NOTE client gets added in bg handler after login success
+	// NOTE client gets added inside bg handler after login success
     // The string is the account username
     private static ConcurrentHashMap<String, BackgroundHandlerServer> clients;
     private static Database data;
@@ -45,6 +45,7 @@ public class Server {
         // create List or Map to track connected clients
         clients = new ConcurrentHashMap<>();
         data = new Database();
+        requestStore = new RqstStore();
 
         // 4. (Optional) Set up a thread pool (for handling clients)
         // initialize ExecutorService or thread pool
@@ -59,7 +60,8 @@ public class Server {
      * @param login Login object with username and password that needs verification
      * @return True if login is in database, False otherwise
      */
-    private boolean loginHandling(Login login) {
+    // TODO send login verification here?
+    private static boolean loginHandling(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
     	return acct != null && login.getPassword().equals(acct.getPassword());
@@ -68,39 +70,98 @@ public class Server {
     /**
      * Send message history of a chat to client as a Message[]
      * 
-     * @param clientStream Stream to send history to
+     * @param userName name of recipient
      * @param chatName Desired chat
      * @throws IOException 
      */
-    private void sendMsgHistory(ObjectOutputStream clientStream, String chatName) throws IOException {
+    private void sendMsgHistory(String userName, String chatName) throws IOException {
     	Message[] toSend = data.getChat(chatName).getMsgHistory();
+    	
+    	ObjectOutputStream clientStream = clients.get(userName).out;
     	clientStream.writeObject(toSend);
     }
     
     /**
-     * Send the user list of a chat to client as an Account[]
+     * Send the user list of a chat to client as a String[]
      * 
-     * @param clientStream Stream to send user list to
-     * @param chatName Desired chat
+     * @param userName recipient of the userList 
      * @throws IOException 
      */
-    private void sendUserList(ObjectOutputStream clientStream, String chatName) throws IOException {
-    	Account[] toSend = data.getChat(chatName).getUsers();
-    	clientStream.writeObject(toSend);
+    private void sendAllUsers(String userName) throws IOException {
+    	String[] userNames = data.getAccounts().stream()
+    			.map(acct -> acct.getName())
+    			.toArray(String[]::new);
+    	
+    	ObjectOutputStream clientStream = clients.get(userName).out;
+    	clientStream.writeObject(userNames);
     }
     
     /**
-     * Send a chat to client as an Chat obj
+     * Send a chat to client as a Chat obj
      * 
-     * @param clientStream Stream to send chat to
+     * @param userName name of recipient
      * @param chatName Desired chat
      * @throws IOException 
      */
-    private void sendChat(ObjectOutputStream clientStream, String chatName) throws IOException {
+    // TODO we got sendmsghist too, should we keep both?
+    private void sendChat(String userName, String chatName) throws IOException {
     	Chat toSend = data.getChat(chatName);
+    	
+    	ObjectOutputStream clientStream = clients.get(userName).out;
     	clientStream.writeObject(toSend);
     }
 
+    /**
+     * Send a message obj to client with userName
+     * 
+     * @param userName recipient of message
+     * @param msg message to send
+     * @throws IOException
+     */
+    private void sendMsg(String userName, Message msg) throws IOException {
+    	ObjectOutputStream clientStream = clients.get(userName).out;
+    	clientStream.writeObject(msg);
+    }
+    
+    /**
+     * Push a message to the store
+     * 
+     * @param msg message to queue
+     */
+    private void pushStore(Message msg) {
+    	try {
+    	    requestStore.addToIncoming(msg);
+    	} catch (InterruptedException e) {
+    	    Thread.currentThread().interrupt(); // propagate interrupt status
+    	}
+    }
+    
+    /**
+     * Pull a message from the store
+     * 
+     * @return message obj from the store
+     */
+    private Message popStore() {
+    	try {
+			Message msg = (Message) requestStore.getIncoming();
+			return msg;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt(); // propagate interrupt status
+		}
+    	
+    	return null; // should never happen tho
+    }
+    
+    /**
+     * Get Chat obj from its chatName
+     * 
+     * @param chatName name of desired chat
+     * @return chat obj with its name = chatName
+     */
+    private Chat getChat(String chatName) {
+    	return data.getChat(chatName);
+    }
+    
     private void logoutHandler() {
         TODO.todo("close client connections, remove client from map, end thread");
     }
@@ -121,6 +182,44 @@ public class Server {
         TODO.todo();
     }
 
+    // to broadcast messages in rqstStore
+    private static class RqstHandler implements Runnable {
+    	 private final Server server;
+
+	    public RqstHandler(Server server) {
+	        this.server = server;
+	    }
+	    
+	    @Override
+	    public void run() {
+	    	while(true) {
+	    		Message msg = server.popStore();
+	    		if(msg == null) continue;
+	    		
+	    		Chat c = server.getChat(msg.getChatname());
+	    		Account[] ul = c.getUsers();
+	    		
+	    		// broadcast to active users in ul
+	    		for(Account acct : ul) {
+	    			String userName = acct.getName();
+	    			try {
+						server.sendMsg(userName, msg);
+					} catch (IOException e) {
+						String errStr = "Broadcast thread failed: " + 
+								msg.toString() + 
+								" | " + userName;
+						
+						System.err.println(errStr);
+						throw new RuntimeException(errStr, e);
+					}
+	    		}
+	    	}
+	    }
+    }
+    
+    // TODO a lil hard to read, boss
+    // TODO why extend? class has access to server attributes/methods. 
+    // TODO could hold a reference to main server
     private static class BackgroundHandlerServer extends Server implements Runnable {
         private ObjectOutputStream out;
         private ObjectInputStream in;
@@ -128,6 +227,7 @@ public class Server {
         public BackgroundHandlerServer(Socket conn) {
             this.conn = conn;
         }
+        
         @Override
         public void run() {
             // Gather the output stream information
@@ -150,19 +250,18 @@ public class Server {
             }
 
             // The client will infer that it logged in or not
-            try {
-                if (!super.loginHandling(login)) {
-                    // close the thread
-                    System.out.println("Login for User [" + login.getUsername() + "] Failed");
-                    out.writeObject(new Login(LoginType.FAILURE));
-                    return;
+            if (!super.loginHandling(login)) {
+                // close the thread
+                try {
+                    System.out.println("Login for " + login.getUsername() + " Failed");
+                    out.writeObject(login);
+                } catch (IOException e) {
+                    // Doesn't matter
                 }
-                System.out.println("Login for User [" + login.getUsername() + "] Succeeded");
-                out.writeObject(new Login(LoginType.SUCCESS));
-            } catch (IOException e) {
-                // Errors, disconnect the client
                 return;
             }
+
+            System.out.println("Login for " + login.getUsername() + " Succeeded");
 
             // Send chats to the Client
             List<Chat> chats = data.getChats(login.getUsername());
@@ -174,17 +273,6 @@ public class Server {
                 return;
             }
 
-            // Send all usernames to the Client
-            String[] allUsernames =  data.getAccounts()
-                    .stream()
-                    .map(account -> account.getName())
-                    .toArray(String[]::new);
-            try {
-                this.out.writeObject(allUsernames);
-            } catch (IOException e) {
-                return;
-            }
-
             // loop to handle switching chats/sending messages/stuff like that
             while (true) {
                 Message msg = null;
@@ -192,7 +280,6 @@ public class Server {
                 try {
                     msg = (Message) this.in.readObject();
                 } catch (IOException e) {
-                    e.printStackTrace();
                     return;
                 } catch (ClassNotFoundException e) {
                     // Do nothing here, it might not be over yet
@@ -208,10 +295,8 @@ public class Server {
                 if (msg != null) {
                     try {
                         data.saveMessage(msg);
-                        // Tell all clients to get a new message
+                        // Tell the other clients to get a new message
                         for (Account user : newChat.getUsers()) {
-                            // We don't have to send it back to the original user
-                            if (user.equals(conn)) { continue; }
                             clients.get(user.getName()).out.writeObject(msg);
                         }
                     } catch (IOException e) {
@@ -223,6 +308,7 @@ public class Server {
                     // move on to the next iteration
                     continue;
                 }
+
 
                 // Why do we need to convert accounts to strings when you just convert strings back to accounts
                 // in the addChat() method?
