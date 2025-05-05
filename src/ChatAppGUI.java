@@ -4,8 +4,9 @@ import java.awt.event.*;
 /*
  * Skeleton of the ChatAppGUI that needs to be hooked up to the methods, made based on the Figma Design
  */
+import java.util.ArrayList;
 
-public class ChatAppGUI {
+public class ChatAppGUI extends Client {
     private JFrame frame;
     private CardLayout cards;
     private JPanel root;
@@ -18,6 +19,8 @@ public class ChatAppGUI {
     private JLabel userLabel; //for adding on top of the add chat button
     
     //Chat components
+//    private DefaultListModel<String> chatListModel;
+//    private JList<String> chatList;
     private DefaultListModel<String> chatListModel;
     private JList<String> chatList;
     private DefaultListModel<String> userListModel;
@@ -26,12 +29,20 @@ public class ChatAppGUI {
     private JTextField messageField;
     private JLabel chatTitle;
     private JLabel chatError;
+    private Chat currentChat;
     
-    public static void main(String [] args) {
-    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+//    public static void main(String [] args) {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+//    }
+    
+    public ChatAppGUI() {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+    	
+    	this.currentChat = null;
+    	this.currentUsername = "";
     }
     
-    private void init() {
+    public void init() {
     	frame = new JFrame("Chat Application");
     	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     	frame.setSize(900,600);
@@ -170,30 +181,80 @@ public class ChatAppGUI {
     private void doLogin() {
     	String user = usernameField.getText();
     	String pass = new String(passwordField.getPassword());
-    	//TODO: send login request to server to authenticate
-    	boolean success = true;
+    	
+    	super.startSocket();
+    	
+    	boolean success = super.login(user, pass);
+    	
     	if(success) {
     		currentUsername = user;
     		userLabel.setText(currentUsername);
     		cards.show(root, "chat");
+    		
+    		loginError.setText("");
+    		
+    		super.getChatFromServer();
+    		for(Chat chat : super.getChats()) {
+    			this.chatListModel.addElement(chat.getChatName());
+    		}
+    		
+        	super.getUserNamesFromServer();
+
+        	super.startClientThreads();
+        	
     	} else {
     		loginError.setText("Invalid credentials");
+    		super.closeSocket();
     	}
     }
     
     private void doLogout() {
-    	//TODO: notify server
+    	usernameField.setText("");
+    	passwordField.setText("");
     	cards.show(root, "login");
+    	
+    	super.stopClientThreads();
+    	
+//    	System.out.println("Threads should have stopped");
+//    	System.exit(0);
+    	
+    	super.closeSocket();
     } 
     
     private void loadSelectedChat() {
     	String chat = chatList.getSelectedValue();
-    	if(chat == null) {
+    	
+    	for(Chat c : super.getChats()) {
+    		if(chat.equals(c.getChatName())) {
+    			this.currentChat = c;
+    		}
+    	}
+    	
+    	if(chat == null || this.currentChat == null) {
     		return;
     	}
+    	
     	chatTitle.setText(chat);
+    	
     	historyArea.setText("");
+    	for(Message msg : this.currentChat.getMsgHistory()) {
+    		historyArea.setText(
+    				historyArea.getText()
+    				+ "\n"
+    				+ msg.getAccountName()
+    				+ " "
+    				+ msg.getTime().getHour()
+    				+ ":"
+    				+ msg.getTime().getMinute()
+    				+ " >>> "
+    				+ msg.getMsg()
+    		);
+    	}
+    	
     	userListModel.clear();
+    	for(String name : this.currentChat.getUsersNames()) {
+    		userListModel.addElement(name);
+    	}
     }
     
     private void sendMessage() {
@@ -201,22 +262,36 @@ public class ChatAppGUI {
     	if(msg.isEmpty()) {
     		return;
     	}
-    	//TODO: send message to server
+    	
+    	Message newMsg = new Message(
+				msg,
+				this.currentUsername,
+				this.currentChat.getChatName()
+		);
+    	
+    	super.sendMsg(newMsg);
+    	
+    	this.currentChat.addMessage(newMsg);
+    	
     	messageField.setText("");
     }
     
     private void showNewChatDialog() {
+    	ArrayList<String> newChatUsers = new ArrayList<String>();
+    	
     	JDialog dlg = new JDialog(frame, "New Chat", true);
     	dlg.setSize(300,400);
     	dlg.setLayout(new BorderLayout(5,5));
-    	
+
     	JTextField nameIn = new JTextField();
     	nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
+    	JTextField usersIn = new JTextField();
+    	usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
     	JTextField searchIn = new JTextField();
     	searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
     	DefaultListModel<String> searchModel = new DefaultListModel<>();
     	JList<String> searchList = new JList<>(searchModel);
-    
+
     	//any time text is inserted, removed, or its attributes change, refresh user-search results
     	searchIn.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
     		public void insertUpdate(javax.swing.event.DocumentEvent e) {
@@ -229,26 +304,64 @@ public class ChatAppGUI {
     			update();
     		}
     		private void update() {
-    			String q = searchIn.getText();
-    			//TODO: fetch matching users from server
+    			String input = searchIn.getText();
+
+    			ArrayList<String> matching = searchUserList(input);
+
     			searchModel.clear();
-    			searchModel.addElement("User1"); //placeholder
+    			//    			searchModel.addElement("User1"); //placeholder
+    			for(String name : matching) {
+    				if(newChatUsers.contains(name)) {
+    					continue;
+    				}
+    				searchModel.addElement(name);
+    			}
     		}
     	});
-    	
+
     	JButton createBtn = new JButton("Create");
-    	createBtn.addActionListener(e -> dlg.dispose());
-    	
-    	JPanel top = new JPanel(new GridLayout(2, 1, 5, 5));
+    	createBtn.addActionListener(e -> createNewChat(dlg, newChatUsers, nameIn));
+
+    	JPanel top = new JPanel(new GridLayout(3, 1, 5, 5));
     	top.add(nameIn);
+    	top.add(usersIn);
     	top.add(searchIn);
     	dlg.add(top, BorderLayout.NORTH);
     	dlg.add(new JScrollPane(searchList), BorderLayout.CENTER);
     	dlg.add(createBtn, BorderLayout.SOUTH);
     	dlg.setLocationRelativeTo(frame);
     	dlg.setVisible(true);
-    	}
+    	
+    	searchList.addListSelectionListener(
+    			e -> addUserToNewChat(searchList, searchModel, newChatUsers, searchIn, usersIn)
+    	);
     }
+    
+    private void addUserToNewChat(JList<String> searchList, 
+    		DefaultListModel<String> searchModel, 
+    		ArrayList<String> newChatUsers,
+    		JTextField searchIn,
+    		JTextField usersIn) {
+    	
+    	String user = searchList.getSelectedValue();
+    	
+    	System.out.println("Here");
+    	
+    	if(user == null) {
+    		return;
+    	}
+    	
+    	newChatUsers.add(user);
+    	usersIn.setText(usersIn.getText() + "\n" + user);
+    	searchModel.clear();
+    	searchIn.setText("");
+    }
+    
+    private void createNewChat(JDialog dlg, ArrayList<String> newChatUsers, JTextField nameIn) {
+    	super.makeChat(newChatUsers.toArray(new String[0]), nameIn.getText());
+    	dlg.dispose();
+    }
+}
    
 
 
