@@ -185,7 +185,7 @@ public class Server {
 
     // to broadcast messages in rqstStore
     private static class RqstHandler implements Runnable {
-    	 private final Server server;
+        private final Server server;
 
 	    public RqstHandler(Server server) {
 	        this.server = server;
@@ -198,11 +198,10 @@ public class Server {
 	    		if(msg == null) continue;
 	    		
 	    		Chat c = server.getChat(msg.getChatname());
-	    		Account[] ul = c.getUsers();
+	    		String[] ul = c.getUsersNames();
 	    		
 	    		// broadcast to active users in ul
-	    		for(Account acct : ul) {
-	    			String userName = acct.getName();
+	    		for(String userName : ul) {
 	    			// skip user if they aren't online
 	    			if(!Server.clients.containsKey(userName)) continue;
 	    			
@@ -214,8 +213,7 @@ public class Server {
 							Server.clients.remove(userName);
 							continue;
 						}
-							
-							
+
 						String errStr = "Broadcast thread failed: " + 
 								msg.toString() + 
 								" | " + userName;
@@ -231,7 +229,7 @@ public class Server {
     // TODO a lil hard to read, boss
     // TODO why extend? class has access to server attributes/methods. 
     // TODO could hold a reference to main server
-    private static class BackgroundHandlerServer extends Server implements Runnable {
+    private static class BackgroundHandlerServer implements Runnable {
         private ObjectOutputStream out;
         private ObjectInputStream in;
         private Socket conn;
@@ -305,8 +303,8 @@ public class Server {
                     try {
                         data.saveMessage(msg);
                         // Tell the other clients to get a new message
-                        for (Account user : newChat.getUsers()) {
-                            clients.get(user.getName()).out.writeObject(msg);
+                        for (String user : newChat.getUsersNames()) {
+                            clients.get(user).out.writeObject(msg);
                         }
                     } catch (IOException e) {
                         // Stop the thread if it's not done
@@ -318,12 +316,7 @@ public class Server {
                     continue;
                 }
 
-
-                // Why do we need to convert accounts to strings when you just convert strings back to accounts
-                // in the addChat() method?
-                String[] usernames = Arrays.stream(newChat.getUsers())
-                        .map(Account::getName)
-                        .toArray(String[]::new);
+                String[] usernames = newChat.getUsersNames();
                 try {
                     data.addChat(usernames, newChat.getChatName());
                     TODO.todo("figure out a way to get the chats to all new users, possible to use observers");
