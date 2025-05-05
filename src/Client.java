@@ -5,47 +5,73 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import javax.swing.SwingUtilities;
+
 import java.io.*;
 
 public class Client {
-    private static Socket socket;
+    private static Socket socket = null;
     private static ObjectOutputStream out;
     private static ObjectInputStream in;
     private Queue<Message> offlineQ = new LinkedList<>(); // need to rename QueueForOfflineMessages in Design
     private static Account account;
     private Message msg; // why do we need a message here?
     private static String[] userList;
-    private static GUI display;
+//    private static GUI display;
+    private static ChatAppGUI display;
     private static RqstStore requestStore;
     private static List<Chat> chats;
+    private static Thread background;
+    private static Thread outgoing;
+    private static Thread incoming;
 
     public static void main(String[] args) {
     	//remove later
     	System.out.println("Running Client\n");
     	
     	try {
-    		socket = new Socket("localhost", 42069);
-    		out = new ObjectOutputStream(socket.getOutputStream());
-    		in = new ObjectInputStream(socket.getInputStream());
-    		
     		//makes the Request Store object
     		requestStore = new RqstStore();
     		
     		//login and gets chat info, then starts background thread, and goes to main screen
         	display();
+        	
+        	//blocks main thread until GUI Thread is over
+        	Thread.currentThread().join();
     		
-		} catch (IOException e) {
+		} catch (InterruptedException e) {
 			e.printStackTrace();
+			
 		} finally {
-			try {
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			closeSocket();
 		}
     	
     	System.out.println("\nClient Done");
     	System.exit(0); //for cleaning up and running thread
+    }
+    
+    public static void startSocket() {
+    	try {
+			socket = new Socket("localhost", 42069);
+			out = new ObjectOutputStream(socket.getOutputStream());
+    		in = new ObjectInputStream(socket.getInputStream());
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    public static void closeSocket() {
+    	try {
+    		if(socket != null) {
+    			socket.close();
+    			socket = null;
+    		}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
     // why is this method needed?
@@ -96,19 +122,46 @@ public class Client {
     }
 
     public static void display() {
-    	display = new GUI();
+//    	display = new GUI();
+//    	
+//    	display.loginScreen();
     	
-    	display.loginScreen();
+    	display = new ChatAppGUI();
     	
-    	getChatFromServer();
+    	SwingUtilities.invokeLater(() -> display.init());
     	
-    	getUserNamesFromServer();
+//    	try {
+//			Thread.currentThread().wait();
+//			
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+    	
+//    	getChatFromServer();
+//    	
+//    	getUserNamesFromServer();
 		
-		new Thread(new BackgroundHandlerClient(), "Background Message Handler").start();
-		new Thread(new IncomingHandler(), "Incoming Chat Handler").start();
-		new Thread(new OutgoingHandler(), "Outgoing Chat Handler").start();
+//		new Thread(new BackgroundHandlerClient(), "Background Message Handler").start();
+//		new Thread(new IncomingHandler(), "Incoming Chat Handler").start();
+//		new Thread(new OutgoingHandler(), "Outgoing Chat Handler").start();
     	
-    	display.mainScreen();
+//    	display.mainScreen();
+    }
+    
+    public static void startClientThreads() {
+    	background = new Thread(new BackgroundHandlerClient(), "Background Message Handler");
+		incoming = new Thread(new IncomingHandler(), "Incoming Chat Handler");
+		outgoing = new Thread(new OutgoingHandler(), "Outgoing Chat Handler");
+		
+		background.start();
+		incoming.start();
+		outgoing.start();
+    }
+    
+    public static void stopClientThreads() {
+    	background.interrupt();
+//    	incoming.interrupt(); //doesn't need to be interrupted because gets handled when socket closes
+//    	outgoing.interrupt();
     }
 
     public boolean login(String username, String password) {
@@ -126,16 +179,16 @@ public class Client {
     
             if (loginResponse.getLoginStatus() == LoginType.SUCCESS) 
             {
-                System.out.println("Login successful!");
+//                System.out.println("Login successful!");
                 loginSucceeded = true;
                 
                 //gets account info from server if the login was successful
                 account = (Account) in.readObject();
             } 
-            else 
-            {
-                System.out.println("Login failed! Please try again.");
-            }
+//            else 
+//            {
+//                System.out.println("Login failed! Please try again.");
+//            }
             
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -148,7 +201,7 @@ public class Client {
     /**
      * Called by main for getting chat list for clients account after login.
      */
-    private static void getChatFromServer() {
+    public static void getChatFromServer() {
     	try {
     		chats = (List<Chat>) in.readObject();
 			
@@ -160,7 +213,7 @@ public class Client {
     /**
      * Called by main for getting user names for clients account after login.
      */
-    private static void getUserNamesFromServer() {
+    public static void getUserNamesFromServer() {
     	try {
     		userList = (String[]) in.readObject();
 			
@@ -174,12 +227,12 @@ public class Client {
      * that has all user's names that contains partialName String.
      * 
      * @param partialName	A partial name string for searching
-     * @return 				List<String> for all names hat contains partialName
+     * @return 				ArrayList<String> for all names hat contains partialName
      */
-    private List<String> searchUserList(String partialName) {
-    	List<String> temp = new ArrayList<String>();
+    public static ArrayList<String> searchUserList(String partialName) {
+    	ArrayList<String> temp = new ArrayList<String>();
 
-    	for(String name : this.userList) {
+    	for(String name : userList) {
     		if(name.contains(partialName)) {
     			temp.add(name);
     		}
@@ -208,7 +261,6 @@ public class Client {
 
     	@Override
     	public void run() {
-    		//            TODO.todo();
     		try {
     			//handles incoming messages from client request store queue
     			while(true) {
@@ -240,7 +292,7 @@ public class Client {
     			}
 
     		} catch (InterruptedException e) {
-    			e.printStackTrace();
+//    			System.out.println("Background was interruped");
     		}
     	}
     }
@@ -254,13 +306,20 @@ public class Client {
 		public void run() {
 			while(true) {
 				try {
-					System.out.println("Reading messages!");
+//					System.out.println("Reading messages!");
 					Object incomingObj = in.readObject();
 					requestStore.addToIncoming(incomingObj);
 					
-				} catch (InterruptedException | ClassNotFoundException | IOException e) {
+				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
-					return; // If things break, please return
+					
+				} catch (InterruptedException e) {
+//					System.out.println("Incoming was interruped");
+					break;
+					
+				} catch (IOException e) {
+//					System.out.println("Socket closed");
+					break;
 				}
 			}
 		}
@@ -279,8 +338,13 @@ public class Client {
 					//should block thread because its a blocking queue in request store
 					out.writeObject(requestStore.getOutgoing());
 					
-				} catch (IOException | InterruptedException e) {
-					e.printStackTrace();
+				} catch (IOException e) {
+//					System.out.println("Socket closed");
+					break;
+					
+				} catch (InterruptedException e) {
+//					System.out.println("outgoing was interruped");
+					break;
 				}
 			}
 		}
