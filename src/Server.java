@@ -100,7 +100,7 @@ public class Server {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
     	return acct != null && login.getPassword().equals(acct.getPassword()) &&
-    			clients.containsKey(login.getUsername());
+    			!clients.containsKey(login.getUsername());
     }
 
     /**
