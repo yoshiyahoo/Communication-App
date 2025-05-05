@@ -21,9 +21,6 @@ public class Client {
 
     public static void main(String[] args) {
     	try {
-    		//makes the Request Store object
-    		requestStore = new RqstStore();
-    		
     		//login and gets chat info, then starts background thread, and goes to main screen
         	display();
         	
@@ -44,9 +41,13 @@ public class Client {
     
     /**
      * For starting socket and in/out socket streams
+     * Also make a new request store
      */
     public static void startSocket() {
     	try {
+    		//makes the Request Store object
+    		requestStore = new RqstStore();
+    		
 			socket = new Socket("localhost", 42069);
 			out = new ObjectOutputStream(socket.getOutputStream());
     		in = new ObjectInputStream(socket.getInputStream());
@@ -72,12 +73,13 @@ public class Client {
     }
     
     /**
-     * Just cleans up chats, userList, and account on a logout
+     * Just cleans up chats, userList, requestStore, and account on a logout
      */
     public static void cleanUpOnLogout() {
-    	chats = null;
+    	chats.clear();
     	userList = null;
     	account = null;
+    	requestStore = null;
     }
 
     /**

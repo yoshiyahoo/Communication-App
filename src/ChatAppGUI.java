@@ -199,6 +199,10 @@ public class ChatAppGUI extends Client {
     }
     
     private void doLogin() {
+    	//might want to remove this later
+    	chatListModel.clear();
+    	this.currentChat = null; 
+    	
     	String user = usernameField.getText();
     	String pass = new String(passwordField.getPassword());
     	
@@ -229,6 +233,11 @@ public class ChatAppGUI extends Client {
     }
     
     private void doLogout() {
+    	//might want to remove this later
+//    	chatList.clearSelection();
+    	
+    	historyArea.setText("");
+    	
     	usernameField.setText("");
     	passwordField.setText("");
     	cards.show(root, "login");
@@ -245,13 +254,17 @@ public class ChatAppGUI extends Client {
     private void loadSelectedChat() {
     	String chat = chatList.getSelectedValue();
     	
+    	if(chat == null) {
+    		return;
+    	}
+    	
     	for(Chat c : super.getChats()) {
     		if(chat.equals(c.getChatName())) {
     			this.currentChat = c;
     		}
     	}
     	
-    	if(chat == null || this.currentChat == null) {
+    	if(this.currentChat == null) {
     		return;
     	}
     	
