@@ -1,6 +1,6 @@
 
 import java.net.Socket;
-import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,21 +43,15 @@ public class Client {
     }
     
     /**
-     * For starting socket and in/out socket streams
-     * Also make a new request store
-     */
-    public static void startSocket() {
-    	try {
-    		//makes the Request Store object
-    		requestStore = new RqstStore();
-    		
-			socket = new Socket("localhost", 42069);
-			out = new ObjectOutputStream(socket.getOutputStream());
-    		in = new ObjectInputStream(socket.getInputStream());
-			
-		} catch (IOException e) {
-			//here if socket/streams failed to start properly
-		}
+    * For starting socket and in/out socket streams
+    * Also make a new request store
+    */
+    public static void startSocket(String host) throws UnknownHostException, IOException {
+      requestStore = new RqstStore();
+
+      socket = new Socket(host, 42069);
+      out = new ObjectOutputStream(socket.getOutputStream());
+      in = new ObjectInputStream(socket.getInputStream());
     }
     
     /**
@@ -206,12 +200,11 @@ public class Client {
      * Called by main for getting user names for clients account after login.
      */
     public static void getUserNamesFromServer() {
-        try {
-            userList = (String[]) in.readObject();
-
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        }
+    	try {
+    		userList = (String[]) in.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
     }
 
     /**

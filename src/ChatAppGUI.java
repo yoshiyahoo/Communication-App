@@ -1,5 +1,11 @@
 
 import java.awt.*;
+import java.awt.event.*;
+import java.io.IOException;
+import java.net.UnknownHostException;
+/*
+ * Skeleton of the ChatAppGUI that needs to be hooked up to the methods, made based on the Figma Design
+ */
 import java.util.ArrayList;
 import javax.swing.*;
 
@@ -11,6 +17,7 @@ public class ChatAppGUI extends Client {
     // Login components
     /*private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
+    private JTextField addressField = new JTextField();
     private JLabel loginError = new JLabel();
      */
     //for adding on top of the add chat button
@@ -26,44 +33,106 @@ public class ChatAppGUI extends Client {
     private JLabel chatTitle;
     private JLabel chatError;
     private Chat currentChat;
-// Called by the client's BackgroundHandlerCLient(view SwingUtilities.invokeLater) when a new Chat arrives from the server
-public void addChatToList(String chatName) {
-    //avoid duplicates
-    if(!chatListModel.contains(chatName)) {
-    chatListModel.addElement(chatName);
+    
+    // uncomment to test
+//    public static void main(String [] args) {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+//    }
+    
+    // Called by the client's BackgroundHandlerCLient(view SwingUtilities.invokeLater) when a new Chat arrives from the server
+    public void addChatToList(String chatName) {
+    	//avoid duplicates
+    	if(!chatListModel.contains(chatName)) {
+    	chatListModel.addElement(chatName);
+    	}
+    	
+    	//select the newly added chat(this dont work maybe later fix bugs with it if possible)
+    	//int idx = chatListModel.indexOf(chatName);
+    	//chatList.setSelectedIndex(idx);
+    	//chatList.ensureIndexIsVisible(idx);
     }
     
-    //select the newly added chat(this dont work maybe later fix bugs with it if possible)
-    //int idx = chatListModel.indexOf(chatName);
-    //chatList.setSelectedIndex(idx);
-    //chatList.ensureIndexIsVisible(idx);
-}
-
-//Called by client's BackgroundHandler Client(or locally on send)) to append a line of chat text to history area
-public void appendMessage(String line) {
-    historyArea.append(line);
-}
-   
-
-   
-
-    //Login Integration
-    public ChatAppGUI(Account account) {
-		this.currentUsername = account.getName();
-        frame = new JFrame("Chat Application");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(900, 600);
-
-        cards = new CardLayout();
-        root = new JPanel(cards);
-
-        //root.add(buildLoginPanel(), "login");
-        root.add(buildChatPanel(), "chat");
-
-        frame.setContentPane(root);
-        frame.setVisible(true);
+    //Called by client's BackgroundHandler Client(or locally on send)) to append a line of chat text to history area
+    public void appendMessage(String line) {
+    	historyArea.append(line);
     }
-
+    
+    
+    
+    public ChatAppGUI() {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+    	
+    	this.currentChat = null;
+    	this.currentUsername = "";
+    }
+    
+    public void init() {
+    	frame = new JFrame("Chat Application");
+    	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    	frame.setSize(900,600);
+    	
+    	cards = new CardLayout();
+    	root = new JPanel(cards);
+    	
+    	root.add(buildLoginPanel(), "login");
+    	root.add(buildChatPanel(), "chat");
+    	
+    	frame.setContentPane(root);
+    	frame.setVisible(true);
+    }
+    
+    private JPanel buildLoginPanel() {
+    	JPanel panel = new JPanel();
+    	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    	panel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+    	
+    	//Configure text fields to fixed size
+    	usernameField.setColumns(15);
+    	usernameField.setMaximumSize(usernameField.getPreferredSize());
+    	usernameField.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	passwordField.setColumns(15);
+    	passwordField.setMaximumSize(passwordField.getPreferredSize());
+    	passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	addressField.setColumns(15);
+    	addressField.setMaximumSize(passwordField.getPreferredSize());
+    	addressField.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	
+    	JLabel header = new JLabel("Enter Credentials");
+    	header.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(header);
+    	panel.add(Box.createVerticalStrut(15));
+    	
+    	JLabel userLabel = new JLabel("Username:");
+    	userLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(userLabel);
+    	panel.add(usernameField);
+    	panel.add(Box.createVerticalStrut(10));
+    	
+    	JLabel passLabel = new JLabel("Password:");
+    	passLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(passLabel);
+    	panel.add(passwordField);
+    	panel.add(Box.createVerticalStrut(15));
+    	
+    	JLabel addressLabel = new JLabel("Server Address:");
+    	addressLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(addressLabel);
+    	panel.add(addressField);
+    	panel.add(Box.createVerticalStrut(10));
+    	
+    	JButton loginBtn = new JButton("Login");
+    	loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(loginBtn);
+    	panel.add(Box.createVerticalStrut(5));
+    	
+    	loginError.setForeground(Color.RED);
+    	loginError.setAlignmentX(Component.CENTER_ALIGNMENT);
+    	panel.add(loginError);
+    	
+    	loginBtn.addActionListener(e -> doLogin());
+    	return panel;
+    }
+    
     private JPanel buildChatPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         GUITools.ColorGUIComponents(panel);
@@ -164,10 +233,61 @@ public void appendMessage(String line) {
 
         return panel;
     }
+    
+    private void doLogin() {
+    	//might want to remove this later
+    	chatListModel.clear();
+    	this.currentChat = null; 
+    	
+    	String user = usernameField.getText();
+    	String pass = new String(passwordField.getPassword());
+    	String address = addressField.getText();
+    	
+    	boolean success = true;
+    	
+    	try {
+			super.startSocket(address);
+		} catch (Exception e) {
+			success = false;
+		}
+    	
+    	success = success && super.login(user, pass);
+    	
+    	boolean success = super.login(user, pass);
+    	
+    	if(success) {
+			System.out.println("Successfully logged in!");
+    		currentUsername = user;
+    		userLabel.setText(currentUsername);
+    		cards.show(root, "chat");
+    		
+    		loginError.setText("");
 
-    private void doLogout() 
-    {
-    	super.display();
+    		super.getChatFromServer();
+    		for(Chat chat : super.getChats()) {
+    			this.chatListModel.addElement(chat.getChatName());
+    		}
+    		
+        	super.getUserNamesFromServer();
+
+        	super.startClientThreads();
+        	
+    	} else {
+    		loginError.setText("Invalid credentials");
+    		super.closeSocket();
+    	}
+    }
+    
+    private void doLogout() {
+    	//might want to remove this later
+//    	chatList.clearSelection();
+    	
+    	historyArea.setText("");
+    	
+    	usernameField.setText("");
+    	passwordField.setText("");
+    	cards.show(root, "login");
+    	
     	super.stopClientThreads();
         frame.dispose();
     } 
