@@ -107,7 +107,7 @@ public class GUITools
         }
         else
         {
-            System.out.println("(" + object.getClass().getSimpleName() + ") Object not supported by auto-coloring.");
+            //System.out.println("(" + object.getClass().getSimpleName() + ") Object not supported by auto-coloring.");
         }
     }
 
