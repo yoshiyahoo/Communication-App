@@ -4,3 +4,6 @@ user1,2025-05-05T11:38:56.234911900,user1,I want a diamond sword
 user1,2025-05-05T11:40:01.040104400,user1,now we're getting somewhere
 user1,2025-05-05T17:41:12.609407100,user1,test
 user1,2025-05-05T17:44:21.025366200,Bob,test
+user1,2025-05-05T18:29:37.244070200,user1,here and now
+user1,2025-05-05T18:30:45.571513500,Bob,hmmm
+user1,2025-05-05T18:31:04.737702800,user1,weird
