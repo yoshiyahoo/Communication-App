@@ -229,9 +229,7 @@ public class ChatAppGUI extends Client {
 		}
     	
     	success = success && super.login(user, pass);
-    	
-//    	boolean success = super.login(user, pass);
-    	
+
     	if(success) {
     		currentUsername = user;
     		userLabel.setText(currentUsername);
