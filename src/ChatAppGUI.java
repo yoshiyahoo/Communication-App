@@ -43,8 +43,10 @@ public class ChatAppGUI extends Client {
     public void addChatToList(String chatName) {
     	//avoid duplicates
     	if(!chatListModel.contains(chatName)) {
-    	chatListModel.addElement(chatName);
+    		chatListModel.addElement(chatName);
     	}
+    	
+//    	System.out.println(chatName + " made it to: " + super.getUserAccount().getName());
     	
     	//select the newly added chat(this dont work maybe later fix bugs with it if possible)
     	//int idx = chatListModel.indexOf(chatName);
@@ -348,6 +350,7 @@ public class ChatAppGUI extends Client {
     
     private void showNewChatDialog() {
     	ArrayList<String> newChatUsers = new ArrayList<String>();
+    	newChatUsers.add(super.getUserAccount().getName());
     	
     	JDialog dlg = new JDialog(frame, "New Chat", true);
     	dlg.setSize(300,400);
@@ -357,6 +360,7 @@ public class ChatAppGUI extends Client {
     	nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
     	JTextField usersIn = new JTextField();
     	usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
+    	usersIn.setEditable(false);
     	JTextField searchIn = new JTextField();
     	searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
     	DefaultListModel<String> searchModel = new DefaultListModel<>();
@@ -379,7 +383,6 @@ public class ChatAppGUI extends Client {
     			ArrayList<String> matching = searchUserList(input);
 
     			searchModel.clear();
-    			//    			searchModel.addElement("User1"); //placeholder
     			for(String name : matching) {
     				if(newChatUsers.contains(name)) {
     					continue;
