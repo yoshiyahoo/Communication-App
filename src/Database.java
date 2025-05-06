@@ -167,14 +167,15 @@ public class Database {
         
         // TODO FORCE making chat b/c client freaks out when user gets no chats
         if (chatNames == null) {
-            String[] lonelyUser = new String[] { accountName };
-            Chat emptyChat = new Chat(lonelyUser, accountName);
-            try {
-                this.addChat(lonelyUser, accountName);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return List.of(emptyChat);
+//            String[] lonelyUser = new String[] { accountName };
+//            Chat emptyChat = new Chat(lonelyUser, accountName);
+//            try {
+//                this.addChat(lonelyUser, accountName);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//            return List.of(emptyChat);
+        	return chats;
         }
 
         for (String chat : chatNames) {
