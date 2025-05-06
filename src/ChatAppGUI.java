@@ -43,8 +43,10 @@ public class ChatAppGUI extends Client {
     public void addChatToList(String chatName) {
     	//avoid duplicates
     	if(!chatListModel.contains(chatName)) {
-    	chatListModel.addElement(chatName);
+    		chatListModel.addElement(chatName);
     	}
+    	
+//    	System.out.println(chatName + " made it to: " + super.getUserAccount().getName());
     	
     	//select the newly added chat(this dont work maybe later fix bugs with it if possible)
     	//int idx = chatListModel.indexOf(chatName);
@@ -351,6 +353,7 @@ public class ChatAppGUI extends Client {
     
     private void showNewChatDialog() {
     	ArrayList<String> newChatUsers = new ArrayList<String>();
+    	newChatUsers.add(super.getUserAccount().getName());
     	
     	JDialog dlg = new JDialog(frame, "New Chat", true);
     	dlg.setSize(300,400);
@@ -360,10 +363,14 @@ public class ChatAppGUI extends Client {
     	nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
     	JTextField usersIn = new JTextField();
     	usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
+    	usersIn.setEditable(false);
     	JTextField searchIn = new JTextField();
     	searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
     	DefaultListModel<String> searchModel = new DefaultListModel<>();
     	JList<String> searchList = new JList<>(searchModel);
+    	
+    	//populates the searchModel at the start with all users
+    	populateSearchModel(newChatUsers, searchModel);
 
     	//any time text is inserted, removed, or its attributes change, refresh user-search results
     	searchIn.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
@@ -378,11 +385,15 @@ public class ChatAppGUI extends Client {
     		}
     		private void update() {
     			String input = searchIn.getText();
+    			searchModel.clear();
+    			
+    			if(input.isBlank()) {
+    				populateSearchModel(newChatUsers, searchModel);
+    				return;
+    			}
 
     			ArrayList<String> matching = searchUserList(input);
 
-    			searchModel.clear();
-    			//    			searchModel.addElement("User1"); //placeholder
     			for(String name : matching) {
     				if(newChatUsers.contains(name)) {
     					continue;
@@ -409,6 +420,15 @@ public class ChatAppGUI extends Client {
     	);
     	
     	dlg.setVisible(true);
+    }
+    
+    private void populateSearchModel(ArrayList<String> newChatUsers, DefaultListModel<String> searchModel) {
+    	for(String user : super.getUserList()) {
+    		if(newChatUsers.contains(user)) {
+				continue;
+			}
+    		searchModel.addElement(user);
+    	}
     }
     
     private void addUserToNewChat(JList<String> searchList, 

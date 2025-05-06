@@ -272,7 +272,14 @@ public class Client {
     							chat.addMessage(msg);
     							//now appends to the open history area
     							SwingUtilities.invokeLater(() ->
-    								display.appendMessage(msg.getAccountName() + ": " + msg.getMsg() + "\n"));
+    								display.appendMessage(
+    										String.format(
+    					    				  "%s %02d:%02d >>> %s%n",
+    					    				  msg.getAccountName(),
+    					    				  msg.getTime().getHour(),
+    					    				  msg.getTime().getMinute(),
+    					    				  msg.getMsg()
+    					    		)));
     							break;
     						}
     					}
