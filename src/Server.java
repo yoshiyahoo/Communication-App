@@ -12,6 +12,7 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
@@ -97,7 +98,6 @@ public class Server {
      * @param login Login object with username and password that needs verification
      * @return True if login is in database, False otherwise
      */
-    // TODO send login verification here?
     protected static Login checkLoginStatus(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
@@ -145,7 +145,6 @@ public class Server {
      * @param chatName Desired chat
      * @throws IOException 
      */
-    // TODO we got sendmsghist too, should we keep both?
     protected void sendChat(String userName, String chatName) throws IOException {
     	Chat toSend = data.getChat(chatName);
     	
@@ -167,33 +166,41 @@ public class Server {
     
     /**
      * Push a message to the store
-     * 
      * @param msg message to queue
      */
-    protected void pushStore(Message msg) {
+    protected void pushStore(Message msg) throws ClassNotFoundException {
     	try {
-    	    requestStore.addToIncoming(msg);
+            requestStore.addToIncoming(msg);
     	} catch (InterruptedException e) {
     	    Thread.currentThread().interrupt(); // propagate interrupt status
     	}
     }
-    
+
     /**
-     * Pull a message from the store
-     * 
-     * @return message obj from the store
+     * Push a chat to the store
+     * @param ch the chat to push to the queue
      */
-    protected Message popStore() {
+    protected void pushStore(Chat ch) throws ClassNotFoundException {
+        try {
+            //requestStore.addToIncoming(username);
+            requestStore.addToIncoming(ch);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // propagate interrupt status
+        }
+    }
+    /**
+     * Pull a message or a chat from the store
+     * @return obj from the store
+     */
+    protected Object popStore() {
     	try {
-			Message msg = (Message) requestStore.getIncoming();
-			return msg;
+			return requestStore.getIncoming();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt(); // propagate interrupt status
 		}
-
-    	return null; // should never happen tho
+    	return null; // should never happen
     }
-    
+
     /**
      * Get Chat obj from its chatName
      * 
@@ -203,25 +210,13 @@ public class Server {
     protected Chat getChat(String chatName) {
     	return data.getChat(chatName);
     }
-    
-    protected void logoutHandler() {
-        TODO.todo("close client connections, remove client from map, end thread");
-    }
 
-    protected void handleClients(Socket client) {
-        TODO.todo();
-    }
-
-    protected void handleClientOfflineMsgQ() {
-        TODO.todo();
-    }
-
-    public Message getDatabaseMessages(Socket client) {
-        return (Message) TODO.todo();
-    }
-
-    protected void checkAndSendOfflineMsg(Socket client) {
-        TODO.todo();
+    /**
+     * Log out the user from the system
+     * @param username is the name of the user to log out
+     */
+    protected void logoutHandler(String username) {
+        clients.remove(username);
     }
 
     // to broadcast messages in rqstStore
@@ -234,56 +229,107 @@ public class Server {
 	    
 	    @Override
 	    public void run() {
-	    	while(true) {
-	    		Message msg = popStore();
-	    		if(msg == null) continue;
-	    		
-	    		Chat c = getChat(msg.getChatname());
+            while (true) {
+                Object obj = popStore();
+                switch (obj) {
+                    case Message msg -> {
+                        // Save the current message
+                        try {
+                            data.saveMessage(msg);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        Chat c = getChat(msg.getChatname());
 
-                // save the current message
-                try {
-                    data.saveMessage(msg);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                        String[] ul = c.getUsersNames();
+                        HashSet<String> userSet = new HashSet<String>();
+                        for (String userName : ul) {
+                            userSet.add(userName);
+                        }
+                        // broadcast to active users and
+                        // members of the chat (even implicit admins)
+                        for (String userName : clients.keySet()) {
+                            // skip user if they aren't online
+                            if (!Server.clients.containsKey(userName)) continue;
+                            // skip user if they aren't in the chat and arent admin
+                            if (!userSet.contains(userName) &&
+                                    data.getAccount(userName).getRole() != Role.ADMINISTRATOR) continue;
+
+                            // don't resend the same user the message he sent
+                            if (msg.getAccountName().equals(userName)) continue;
+
+                            try {
+                                sendMsg(userName, msg);
+                            } catch (IOException e) {
+                                // client just disconnected
+                                if (e instanceof EOFException) {
+                                    Server.clients.remove(userName);
+                                    continue;
+                                }
+
+                                String errStr = "Broadcast thread failed: " +
+                                        msg.toString() +
+                                        " | " + userName;
+
+                                System.err.println(errStr);
+                                throw new RuntimeException(errStr, e);
+                            }
+                        }
+                    }
+                    case Chat ch -> {
+                        // pop the user who sent the chat
+                        //String userWhoSent = (String) popStore();
+                        // save the current chat
+                        try {
+                            data.addChat(ch.getUsersNames(), ch.getChatName());
+                        } catch (IOException e) {
+                            // The client disconnected
+                            //clients.remove(userWhoSent);
+                        }
+
+                        HashSet<String> userSet = new HashSet<String>();
+                        for (String user : ch.getUsersNames()) {
+                            userSet.add(user);
+                        }
+                        // broadcast to active users and
+                        // members of the chat (even implicit admins)
+                        for (String userName : clients.keySet()) {
+                            // skip user if they aren't online
+                            if (!Server.clients.containsKey(userName)) continue;
+                            // skip user if they aren't in the chat and arent admin
+                            if (!userSet.contains(userName) &&
+                                    data.getAccount(userName).getRole() != Role.ADMINISTRATOR) continue;
+
+                            // don't resend the same user the chat they made
+                            // creator always goes first
+                            if (userName.equals(ch.getUsersNames()[0])) continue;
+
+                            try {
+                                sendChat(userName, ch.getChatName());
+                            } catch (IOException e) {
+                                Server.clients.remove(userName);
+                                // client just disconnected
+                                if (e instanceof EOFException) {
+                                    continue;
+                                }
+
+                                String errStr = "Broadcast thread failed: " +
+                                        ch.getChatName() +
+                                        " | " + userName;
+
+                                System.err.println(errStr);
+                                throw new RuntimeException(errStr, e);
+                            }
+
+                        }
+                    }
+                    case null, default -> {
+                        // This should not happen
+                        System.err.println("RqstHandler run super unexpected object was found in RqstStore");
+                        System.err.println(obj);
+                    }
                 }
-                
-                String[] ul = c.getUsersNames();
-                HashSet<String> userSet = new HashSet<String>();
-                for(String userName : ul) {
-                	userSet.add(userName);
-                }
-                
-	    		
-	    		// broadcast to active users and
-                // members of the chat (even implicit admins)
-	    		for(String userName : clients.keySet()) {
-	    			// skip user if they aren't online
-	    			if(!Server.clients.containsKey(userName)) continue;
-	    			// skip user if they aren't in the chat and arent admin
-	    			if(!userSet.contains(userName) && 
-	    				data.getAccount(userName).getRole() != Role.ADMINISTRATOR) continue;
-
-                    // don't resend the same user the message he sent
-                    if(msg.getAccountName().equals(userName)) continue;
-	    			
-	    			try {
-						sendMsg(userName, msg);
-					} catch (IOException e) {
-						// client just disconnected
-						if (e instanceof EOFException) {
-							Server.clients.remove(userName);
-							continue;
-						}
-
-						String errStr = "Broadcast thread failed: " + 
-								msg.toString() + 
-								" | " + userName;
-						
-						System.err.println(errStr);
-						throw new RuntimeException(errStr, e);
-					}
-	    		}
-	    	}
+            }
 	    }
     }
     
@@ -344,8 +390,7 @@ public class Server {
                             pushStore(msg);
                         }
                         case Chat newChat -> {
-                            String[] usernames = newChat.getUsersNames();
-                            data.addChat(usernames, newChat.getChatName());
+                            pushStore(newChat);
                         }
                         case null, default -> {
                             clients.remove(userKey);
@@ -353,7 +398,7 @@ public class Server {
                         }
                     }
                 } catch (IOException | ClassNotFoundException e) {
-                    // Drop the client, no mercy
+                    // Logout the client, no mercy
                     clients.remove(userKey);
                     return;
                 }

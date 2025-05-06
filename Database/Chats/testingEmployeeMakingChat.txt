@@ -1,5 +1,0 @@
-user1,user2
-testingEmployeeMakingChat,2025-05-05T18:32:54.994136500,user1,test
-testingEmployeeMakingChat,2025-05-05T18:33:20.848943100,user2,yo
-testingEmployeeMakingChat,2025-05-05T18:33:25.818054100,user1,what
-testingEmployeeMakingChat,2025-05-05T18:33:53.816847900,user2,testing new message formatting
