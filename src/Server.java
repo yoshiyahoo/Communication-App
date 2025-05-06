@@ -1,6 +1,7 @@
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.io.EOFException;
 import java.io.IOException;
@@ -44,6 +45,7 @@ public class Server {
         // 1. Open a server socket on a specific port
         // create ServerSocket listeningSocket on PORT
         server = new ServerSocket(PORT);
+        server.setReuseAddress(true);
 
         // 2. Print startup message
         // print "Server started on port " + PORT
@@ -78,15 +80,15 @@ public class Server {
     	    NetworkInterface ni = interfaces.nextElement();
     	    if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) continue;
 
+            boolean isWifi = ni.getDisplayName().contains("Wi-Fi");
     	    Enumeration<InetAddress> addresses = ni.getInetAddresses();
     	    while (addresses.hasMoreElements()) {
     	        InetAddress addr = addresses.nextElement();
-    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
+    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress() && isWifi) {
     	        	return addr.getHostAddress();
     	        }
     	    }
     	}
-    	
     	return null;
     }
 
@@ -241,12 +243,22 @@ public class Server {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                
                 String[] ul = c.getUsersNames();
+                HashSet<String> userSet = new HashSet<String>();
+                for(String userName : ul) {
+                	userSet.add(userName);
+                }
+                
 	    		
-	    		// broadcast to active users in ul
-	    		for(String userName : ul) {
+	    		// broadcast to active users and
+                // members of the chat (even implicit admins)
+	    		for(String userName : clients.keySet()) {
 	    			// skip user if they aren't online
 	    			if(!Server.clients.containsKey(userName)) continue;
+	    			// skip user if they aren't in the chat and arent admin
+	    			if(!userSet.contains(userName) && 
+	    				data.getAccount(userName).getRole() != Role.ADMINISTRATOR) continue;
 
                     // don't resend the same user the message he sent
                     if(msg.getAccountName().equals(userName)) continue;
