@@ -112,7 +112,7 @@ public class LoginScreen extends Client
         String username = userNameField.getText().trim();
         String password = passwordField.getText().trim();
 
-        super.startSocket();
+        //super.startSocket();
     
         if (username == null || username.isEmpty()) 
         {
@@ -130,7 +130,7 @@ public class LoginScreen extends Client
             return;
         }
     
-         success = super.login(username, password);
+         //success = super.login(username, password);
        
 
         if(success)

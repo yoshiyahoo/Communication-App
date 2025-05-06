@@ -1,4 +1,3 @@
-
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -9,13 +8,12 @@ import javax.swing.SwingUtilities;
 import java.io.*;
 
 public class Client {
-
     private static Socket socket = null;
     private static ObjectOutputStream out;
     private static ObjectInputStream in;
     private static Account account;
     private static String[] userList;
-    private static GUI display;
+    private static ChatAppGUI display;
     private static RqstStore requestStore;
     private static List<Chat> chats;
     private static Thread background;
@@ -86,55 +84,59 @@ public class Client {
      * @param msg
      */
     public void sendMsg(Message msg) {
-        try {
-            requestStore.addToOutGoing(msg); //hand off to outgoing queue
-        } catch (InterruptedException e) {
-            System.out.println("Interrupted while sending message: " + e.getMessage());
-            Thread.currentThread().interrupt();
-        }
+    	try {
+    		requestStore.addToOutGoing(msg); //hand off to outgoing queue
+    	} catch(InterruptedException e) {
+    		System.out.println("Interrupted while sending message: " + e.getMessage());
+    		Thread.currentThread().interrupt();
+    	}
     }
 
     /**
      * gets chatList from Client for GUI
-     *
+     * 
      * @return	List<Chat>
      */
     public List<Chat> getChats() {
-        return chats;
+    	return chats;
     }
-
+    
     /**
      * gets userList from Client for GUI
-     *
+     * 
      * @return String[]
      */
     public String[] getUserList() {
-        return userList;
+    	return userList;
     }
-
+    
     /**
      * gets user account for GUI when creating a message object
-     *
+     * 
      * @return Account
      */
     public Account getUserAccount() {
-        return account;
+    	return account;
     }
 
-    public static void display() 
-    {
-        display = new GUI();
-        display.loginScreen();
+    public static void display() {
+    	display = new ChatAppGUI();
+    	
+    	SwingUtilities.invokeLater(() -> display.init());
     }
-
+    
+    /**
+     * User after startSocket()
+     * Handles starting background, incoming, and outgoing threads
+     */
     public static void startClientThreads() {
-        background = new Thread(new BackgroundHandlerClient(), "Background Message Handler");
-        incoming = new Thread(new IncomingHandler(), "Incoming Chat Handler");
-        outgoing = new Thread(new OutgoingHandler(), "Outgoing Chat Handler");
-
-        background.start();
-        incoming.start();
-        outgoing.start();
+    	background = new Thread(new BackgroundHandlerClient(), "Background Message Handler");
+		incoming = new Thread(new IncomingHandler(), "Incoming Chat Handler");
+		outgoing = new Thread(new OutgoingHandler(), "Outgoing Chat Handler");
+		
+		background.start();
+		incoming.start();
+		outgoing.start();
     }
     
     /**
@@ -156,12 +158,11 @@ public class Client {
      */
     public LoginType login(String username, String password) {
         Login newLogin = new Login(username, password);
-    
         try {
             //Sends login to server
             out.writeObject(newLogin);
             out.flush();
-
+            
             // Receive response from server
             Login loginResponse = (Login) in.readObject();
 			if (loginResponse.getLoginStatus() == LoginType.SUCCESS) {
@@ -186,7 +187,7 @@ public class Client {
 			e.printStackTrace();
 		}
     }
-
+    
     /**
      * Called by main for getting user names for clients account after login.
      */
@@ -199,23 +200,22 @@ public class Client {
     }
 
     /**
-     * This takes in a partial name entry from a user search and returns an
-     * List<String>
+     * This takes in a partial name entry from a user search and returns an List<String>
      * that has all user's names that contains partialName String.
-     *
+     * 
      * @param partialName	A partial name string for searching
-     * @return ArrayList<String> for all names hat contains partialName
+     * @return 				ArrayList<String> for all names hat contains partialName
      */
     public static ArrayList<String> searchUserList(String partialName) {
-        ArrayList<String> temp = new ArrayList<String>();
+    	ArrayList<String> temp = new ArrayList<String>();
 
-        for (String name : userList) {
-            if (name.contains(partialName)) {
-                temp.add(name);
-            }
-        }
+    	for(String name : userList) {
+    		if(name.contains(partialName)) {
+    			temp.add(name);
+    		}
+    	}
 
-        return temp;
+    	return temp;
     }
 
     /**
@@ -225,16 +225,16 @@ public class Client {
      * @param chatname		String for the name of the new chat
      */
     public void makeChat(String[] users, String chatname) {
-        Chat newChat = new Chat(users, chatname);
-
-        chats.add(newChat);
-
-        try {
-            requestStore.addToOutGoing(newChat);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    	Chat newChat = new Chat(users, chatname);
+    	
+    	chats.add(newChat);
+    	
+    	try {
+			requestStore.addToOutGoing(newChat);
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -242,8 +242,7 @@ public class Client {
      */
     private static class BackgroundHandlerClient implements Runnable {
 
-        public BackgroundHandlerClient() {
-        }
+    	public BackgroundHandlerClient() {}
 
     	@Override
     	public void run() {
