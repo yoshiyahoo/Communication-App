@@ -230,8 +230,7 @@ public class ChatAppGUI extends Client {
     	
     	success = success && super.login(user, pass);
     	
-    	boolean success = super.login(user, pass);
-    	
+
     	if(success) {
 			System.out.println("Successfully logged in!");
     		currentUsername = user;
