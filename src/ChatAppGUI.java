@@ -230,10 +230,9 @@ public class ChatAppGUI extends Client {
     	
     	success = success && super.login(user, pass);
     	
-    	boolean success = super.login(user, pass);
+//    	boolean success = super.login(user, pass);
     	
     	if(success) {
-			System.out.println("Successfully logged in!");
     		currentUsername = user;
     		userLabel.setText(currentUsername);
     		cards.show(root, "chat");
@@ -403,11 +402,12 @@ public class ChatAppGUI extends Client {
     	dlg.add(new JScrollPane(searchList), BorderLayout.CENTER);
     	dlg.add(createBtn, BorderLayout.SOUTH);
     	dlg.setLocationRelativeTo(frame);
-    	dlg.setVisible(true);
     	
     	searchList.addListSelectionListener(
     			e -> addUserToNewChat(searchList, searchModel, newChatUsers, searchIn, usersIn)
     	);
+    	
+    	dlg.setVisible(true);
     }
     
     private void addUserToNewChat(JList<String> searchList, 
@@ -417,8 +417,6 @@ public class ChatAppGUI extends Client {
     		JTextField usersIn) {
     	
     	String user = searchList.getSelectedValue();
-    	
-    	System.out.println("Here");
     	
     	if(user == null) {
     		return;
