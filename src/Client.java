@@ -71,7 +71,7 @@ public class Client {
      * Just cleans up chats, userList, requestStore, and account on a logout
      */
     public static void cleanUpOnLogout() {
-    	chats.clear();
+    	chats = null;
     	userList = null;
     	account = null;
     	requestStore = null;

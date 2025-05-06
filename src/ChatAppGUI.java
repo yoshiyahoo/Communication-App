@@ -332,7 +332,9 @@ public class ChatAppGUI extends Client {
     
     private void sendMessage() {
     	String msg = messageField.getText().trim();
-    	if(msg.isEmpty()) {
+    	messageField.setText("");
+    	
+    	if(msg.isEmpty() || this.currentChat == null) {
     		return;
     	}
     	
@@ -347,8 +349,6 @@ public class ChatAppGUI extends Client {
     	this.currentChat.addMessage(newMsg);
     	
         loadSelectedChat();
-    	
-    	messageField.setText("");
     }
     
     private void showNewChatDialog() {
@@ -446,6 +446,7 @@ public class ChatAppGUI extends Client {
     	newChatUsers.add(user);
     	usersIn.setText(usersIn.getText() + "\n" + user);
     	searchModel.clear();
+    	populateSearchModel(newChatUsers, searchModel);
     	searchIn.setText("");
     }
     
