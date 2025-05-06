@@ -36,3 +36,6 @@ replay_pid*
 .idea/
 *.iml
 out/
+
+# All of the current chats
+Database/Chats
