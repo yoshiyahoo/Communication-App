@@ -1,5 +1,0 @@
-employee,user1,password1
-admin,user2,password2
-admin,Bob,pass
-employee,user3,password3
-employee,user4,password4
