@@ -311,6 +311,8 @@ public class ChatAppGUI extends Client {
 //    		);
     	
     	//}
+    	// TODO currchat's hist not updating right
+    	System.out.println("histLen: " + this.currentChat.getMsgHistory().length);
     	for (Message msg : this.currentChat.getMsgHistory()) {
     		  String line = String.format(
     				  "%s %02d:%02d >>> %s%n",

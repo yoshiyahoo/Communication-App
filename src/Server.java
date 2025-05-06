@@ -98,7 +98,6 @@ public class Server {
      * @param login Login object with username and password that needs verification
      * @return True if login is in database, False otherwise
      */
-    // TODO send login verification here?
     protected static Login checkLoginStatus(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
@@ -146,7 +145,6 @@ public class Server {
      * @param chatName Desired chat
      * @throws IOException 
      */
-    // TODO we got sendmsghist too, should we keep both?
     protected void sendChat(String userName, String chatName) throws IOException {
     	Chat toSend = data.getChat(chatName);
     	
@@ -302,8 +300,9 @@ public class Server {
                             if (!userSet.contains(userName) &&
                                     data.getAccount(userName).getRole() != Role.ADMINISTRATOR) continue;
 
-                            // don't resend the same user the message he sent
-                            //if (userName.equals(userWhoSent)) continue;
+                            // don't resend the same user the chat they made
+                            // creator always goes first
+                            if (userName.equals(ch.getUsersNames()[0])) continue;
 
                             try {
                                 sendChat(userName, ch.getChatName());

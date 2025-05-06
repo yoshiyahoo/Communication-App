@@ -266,6 +266,8 @@ public class Client {
     				//Incoming Message
     				if(obj instanceof Message) {
     					Message msg = (Message) obj;
+    					//TODO
+    					System.out.println(msg);
     					//find the right Chat model and add it
     					for(Chat chat : chats) {
     						if(chat.getChatName().equals(msg.getChatname())) {
