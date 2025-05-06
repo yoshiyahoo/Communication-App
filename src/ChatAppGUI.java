@@ -49,8 +49,11 @@ public class ChatAppGUI extends Client {
     }
 
     //Called by client's BackgroundHandler Client(or locally on send)) to append a line of chat text to history area
-    public void appendMessage(String line) {
-        historyArea.append(line);
+    public void appendMessage(String line, String chatName) {
+    	
+    	if(this.currentChat != null && this.currentChat.getChatName() == chatName) {
+    		historyArea.append(line);
+    	}
     }
 
     public ChatAppGUI() {
