@@ -43,8 +43,10 @@ public class ChatAppGUI extends Client {
     public void addChatToList(String chatName) {
     	//avoid duplicates
     	if(!chatListModel.contains(chatName)) {
-    	chatListModel.addElement(chatName);
+    		chatListModel.addElement(chatName);
     	}
+    	
+//    	System.out.println(chatName + " made it to: " + super.getUserAccount().getName());
     	
     	//select the newly added chat(this dont work maybe later fix bugs with it if possible)
     	//int idx = chatListModel.indexOf(chatName);
@@ -242,40 +244,40 @@ public class ChatAppGUI extends Client {
     	String user = usernameField.getText();
     	String pass = new String(passwordField.getPassword());
     	String address = addressField.getText();
-    	
-    	boolean success = true;
-    	
+
     	try {
 			super.startSocket(address);
 		} catch (Exception e) {
-			success = false;
+			loginError.setText("Connection Unsuccessful");
 		}
-    	
-    	success = success && super.login(user, pass);
-    	
-    	boolean success = super.login(user, pass);
-    	
-    	if(success) {
-			System.out.println("Successfully logged in!");
-    		currentUsername = user;
-    		userLabel.setText(currentUsername);
-    		cards.show(root, "chat");
-    		
-    		loginError.setText("");
 
-    		super.getChatFromServer();
-    		for(Chat chat : super.getChats()) {
-    			this.chatListModel.addElement(chat.getChatName());
-    		}
-    		
-        	super.getUserNamesFromServer();
+		LoginType status = super.login(user, pass);
 
-        	super.startClientThreads();
-        	
-    	} else {
-    		loginError.setText("Invalid credentials");
-    		super.closeSocket();
-    	}
+		switch (status) {
+			case SUCCESS -> {
+				currentUsername = user;
+				userLabel.setText(currentUsername);
+				cards.show(root, "chat");
+
+				loginError.setText("");
+
+				super.getChatFromServer();
+				for(Chat chat : super.getChats()) {
+					this.chatListModel.addElement(chat.getChatName());
+				}
+
+				super.getUserNamesFromServer();
+
+				super.startClientThreads();
+			}
+			case FAILURE -> {
+				loginError.setText("Invalid credentials");
+				super.closeSocket();
+			}
+			case LOGGED_IN -> {
+				loginError.setText("Account Already Logged In");
+			}
+		}
     }
     
     private void doLogout() {
@@ -354,68 +356,83 @@ public class ChatAppGUI extends Client {
     }
 
     private void showNewChatDialog() {
-        ArrayList<String> newChatUsers = new ArrayList<>();
-    
-        JDialog dlg = new JDialog(frame, "New Chat", true);
-        dlg.setSize(300, 400);
-        dlg.setLayout(new BorderLayout(5, 5));
-    
+    	ArrayList<String> newChatUsers = new ArrayList<String>();
+    	newChatUsers.add(super.getUserAccount().getName());
+    	
+    	JDialog dlg = new JDialog(frame, "New Chat", true);
+    	dlg.setSize(300,400);
+    	dlg.setLayout(new BorderLayout(5,5));
 
-        JTextField nameIn = new JTextField();
-        nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
-        
+    	JTextField nameIn = new JTextField();
+    	nameIn.setBorder(BorderFactory.createTitledBorder("Chat Name"));
+    	JTextField usersIn = new JTextField();
+    	usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
+    	usersIn.setEditable(false);
+    	JTextField searchIn = new JTextField();
+    	searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
+    	DefaultListModel<String> searchModel = new DefaultListModel<>();
+    	JList<String> searchList = new JList<>(searchModel);
+    	
+    	//populates the searchModel at the start with all users
+    	populateSearchModel(newChatUsers, searchModel);
+
+    	//any time text is inserted, removed, or its attributes change, refresh user-search results
+    	searchIn.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+    		public void insertUpdate(javax.swing.event.DocumentEvent e) {
+    			update();
+    		}
+    		public void removeUpdate(javax.swing.event.DocumentEvent e) {
+    			update();
+    		}
+    		public void changedUpdate(javax.swing.event.DocumentEvent e) {
+    			update();
+    		}
+    		private void update() {
+    			String input = searchIn.getText();
+    			searchModel.clear();
+    			
+    			if(input.isBlank()) {
+    				populateSearchModel(newChatUsers, searchModel);
+    				return;
+    			}
+
+    			ArrayList<String> matching = searchUserList(input);
+
+    			for(String name : matching) {
+    				if(newChatUsers.contains(name)) {
+    					continue;
+    				}
+    				searchModel.addElement(name);
+    			}
+    		}
+    	});
+
+    	JButton createBtn = new JButton("Create");
+    	createBtn.addActionListener(e -> createNewChat(dlg, newChatUsers, nameIn));
+
+    	JPanel top = new JPanel(new GridLayout(3, 1, 5, 5));
+    	top.add(nameIn);
+    	top.add(usersIn);
+    	top.add(searchIn);
+    	dlg.add(top, BorderLayout.NORTH);
+    	dlg.add(new JScrollPane(searchList), BorderLayout.CENTER);
+    	dlg.add(createBtn, BorderLayout.SOUTH);
+    	dlg.setLocationRelativeTo(frame);
+    	
+    	searchList.addListSelectionListener(
+    			e -> addUserToNewChat(searchList, searchModel, newChatUsers, searchIn, usersIn)
+    	);
+    	
+    	dlg.setVisible(true);
+    }
     
-        JTextField usersIn = new JTextField();
-        usersIn.setBorder(BorderFactory.createTitledBorder("Selected Users"));
-        usersIn.setEditable(false);
-    
-        JTextField searchIn = new JTextField();
-        searchIn.setBorder(BorderFactory.createTitledBorder("Add User"));
-    
-        DefaultListModel<String> searchModel = new DefaultListModel<>();
-        JList<String> searchList = new JList<>(searchModel);
-    
-        searchIn.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { update(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { update(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { update(); }
-    
-            private void update() {
-                String input = searchIn.getText().trim();
-                ArrayList<String> matching = searchUserList(input);
-    
-                searchModel.clear();
-                for (String name : matching) {
-                    if (!newChatUsers.contains(name)) {
-                        searchModel.addElement(name);
-                    }
-                }
-            }
-        });
-    
-        
-        searchList.addListSelectionListener(
-            e -> {
-                if (!e.getValueIsAdjusting()) {
-                    addUserToNewChat(searchList, searchModel, newChatUsers, searchIn, usersIn);
-                }
-            }
-        );
-    
-        JButton createBtn = new JButton("Create");
-        createBtn.addActionListener(e -> createNewChat(dlg, newChatUsers, nameIn));
-    
-        JPanel top = new JPanel(new GridLayout(3, 1, 5, 5));
-        top.add(nameIn);
-        top.add(usersIn);
-        top.add(searchIn);
-    
-        dlg.add(top, BorderLayout.NORTH);
-        dlg.add(new JScrollPane(searchList), BorderLayout.CENTER);
-        dlg.add(createBtn, BorderLayout.SOUTH);
-         GUITools.ColorGUIComponents(dlg);
-        dlg.setLocationRelativeTo(frame);
-        dlg.setVisible(true); 
+    private void populateSearchModel(ArrayList<String> newChatUsers, DefaultListModel<String> searchModel) {
+    	for(String user : super.getUserList()) {
+    		if(newChatUsers.contains(user)) {
+				continue;
+			}
+    		searchModel.addElement(user);
+    	}
     }
     
     
@@ -426,8 +443,6 @@ public class ChatAppGUI extends Client {
     		JTextField usersIn) {
     	
     	String user = searchList.getSelectedValue();
-    	
-    	System.out.println("Here");
     	
     	if(user == null) {
     		return;

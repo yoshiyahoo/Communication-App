@@ -1,6 +1,6 @@
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.io.EOFException;
 import java.io.IOException;
@@ -44,6 +44,7 @@ public class Server {
         // 1. Open a server socket on a specific port
         // create ServerSocket listeningSocket on PORT
         server = new ServerSocket(PORT);
+        server.setReuseAddress(true);
 
         // 2. Print startup message
         // print "Server started on port " + PORT
@@ -78,15 +79,15 @@ public class Server {
     	    NetworkInterface ni = interfaces.nextElement();
     	    if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) continue;
 
+            boolean isWifi = ni.getDisplayName().contains("Wi-Fi");
     	    Enumeration<InetAddress> addresses = ni.getInetAddresses();
     	    while (addresses.hasMoreElements()) {
     	        InetAddress addr = addresses.nextElement();
-    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
+    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress() && isWifi) {
     	        	return addr.getHostAddress();
     	        }
     	    }
     	}
-    	
     	return null;
     }
 
@@ -97,11 +98,15 @@ public class Server {
      * @return True if login is in database, False otherwise
      */
     // TODO send login verification here?
-    protected static boolean loginHandling(Login login) {
+    protected static Login checkLoginStatus(Login login) {
     	// get account info from db
     	Account acct = data.getAccount(login.getUsername());
-    	return acct != null && login.getPassword().equals(acct.getPassword()) &&
-    			!clients.containsKey(login.getUsername());
+        if (acct == null || !login.getPassword().equals(acct.getPassword()))
+            return new Login(LoginType.FAILURE);
+        else if (clients.containsKey(login.getUsername()))
+            return new Login(LoginType.LOGGED_IN);
+        else
+            return new Login(LoginType.SUCCESS);
     }
 
     /**
@@ -241,12 +246,22 @@ public class Server {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                
                 String[] ul = c.getUsersNames();
+                HashSet<String> userSet = new HashSet<String>();
+                for(String userName : ul) {
+                	userSet.add(userName);
+                }
+                
 	    		
-	    		// broadcast to active users in ul
-	    		for(String userName : ul) {
+	    		// broadcast to active users and
+                // members of the chat (even implicit admins)
+	    		for(String userName : clients.keySet()) {
 	    			// skip user if they aren't online
 	    			if(!Server.clients.containsKey(userName)) continue;
+	    			// skip user if they aren't in the chat and arent admin
+	    			if(!userSet.contains(userName) && 
+	    				data.getAccount(userName).getRole() != Role.ADMINISTRATOR) continue;
 
                     // don't resend the same user the message he sent
                     if(msg.getAccountName().equals(userName)) continue;
@@ -290,26 +305,31 @@ public class Server {
                 this.in = new ObjectInputStream(conn.getInputStream());
 
                 // Grab the login object from the client and check credentials
-                Login login = (Login) this.in.readObject();
-                if (!loginHandling(login)) {
-                    System.out.println("Login for User [" + login.getUsername() + "]" + " at " + LocalDateTime.now() + " Failed");
-                    out.writeObject(new Login(LoginType.FAILURE));
-                    // Close connection with the client
-                    return;
-                };
-                System.out.println("Login for User [" + login.getUsername() + "]" + " at " + LocalDateTime.now() + " Succeeded");
-                out.writeObject(new Login(LoginType.SUCCESS));
-                out.writeObject(data.getAccount(login.getUsername())); // Also send the client the account object
-                // Add the client to the list of connected clients
-                userKey = login.getUsername();
-                clients.put(userKey, this);
+                Login userCredentials = (Login) this.in.readObject();
+                Login status = checkLoginStatus(userCredentials);
+                this.out.writeObject(status);
+                switch (status.getLoginStatus()) {
+                    case SUCCESS -> {
+                        System.out.println("Login for User [" + userCredentials.getUsername() + "]" + " at " + LocalDateTime.now() + " Succeeded");
 
-                // Send the client all the chats they need
-                List<Chat> chats = data.getChats(login.getUsername());
-                this.out.writeObject(chats);
+                        out.writeObject(data.getAccount(userCredentials.getUsername())); // Also send the client the account object
+                        userKey = userCredentials.getUsername(); // Add the client to the list of connected clients
+                        clients.put(userKey, this);
 
-                // Send all usernames to the client
-                sendAllUsers(userKey);
+                        List<Chat> chats = data.getChats(userCredentials.getUsername()); // Send the client all the chats they need
+                        this.out.writeObject(chats);
+
+                        sendAllUsers(userKey); // Send all usernames to the client
+                    }
+                    case FAILURE -> {
+                        System.out.println("Login for User [" + userCredentials.getUsername() + "]" + " at " + LocalDateTime.now() + " Failed");
+                        return;
+                    }
+                    case LOGGED_IN -> {
+                        System.out.println("Login for already admitted User [" + userCredentials.getUsername() + "]" + " at " + LocalDateTime.now());
+                        return;
+                    }
+                }
             } catch (IOException | ClassNotFoundException e) {
                 // Close the thread and stop handling this client data
                 return;

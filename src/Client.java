@@ -152,13 +152,11 @@ public class Client {
      * 
      * @param username	String username tied to users account
      * @param password	String password tied to users account
-     * @return			boolean that indicates whether or not login was successful
+     * @return			LoginType that indicates whether or not login was successful
      */
-    public boolean login(String username, String password) {
-        boolean loginSucceeded = false;
-
+    public LoginType login(String username, String password) {
         Login newLogin = new Login(username, password);
-
+    
         try {
             //Sends login to server
             out.writeObject(newLogin);
@@ -166,21 +164,14 @@ public class Client {
 
             // Receive response from server
             Login loginResponse = (Login) in.readObject();
-    
-            if (loginResponse.getLoginStatus() == LoginType.SUCCESS) 
-            {
-                loginSucceeded = true;
-
-                //gets account info from server if the login was successful
-                account = (Account) in.readObject();
-            }
-            
+			if (loginResponse.getLoginStatus() == LoginType.SUCCESS) {
+				account = (Account) in.readObject();
+			}
+           	return loginResponse.getLoginStatus();
         } catch (IOException | ClassNotFoundException e) {
         	//if here probably because socket closed when waiting for server objects
         }
-
-        return loginSucceeded;
-
+		return null;
     }
 
     /**
@@ -282,7 +273,14 @@ public class Client {
     							chat.addMessage(msg);
     							//now appends to the open history area
     							SwingUtilities.invokeLater(() ->
-    								display.appendMessage(msg.getAccountName() + ": " + msg.getMsg() + "\n"));
+    								display.appendMessage(
+    										String.format(
+    					    				  "%s %02d:%02d >>> %s%n",
+    					    				  msg.getAccountName(),
+    					    				  msg.getTime().getHour(),
+    					    				  msg.getTime().getMinute(),
+    					    				  msg.getMsg()
+    					    		)));
     							break;
     						}
     					}
