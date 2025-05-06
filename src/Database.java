@@ -67,11 +67,7 @@ public class Database {
             String chatName = file.getName().substring(0, dotIndex);
 
             String[] userList = lines.get(0).split(",");
-            Account[] acctList = Arrays.stream(userList)
-            		.map(userName -> acctNameObjMap.get(userName))
-            		.toArray(Account[]::new);
-            
-            
+
             // TODO do we need a chat id anymore?
             Message[] msgHistory = lines.stream()
                 .skip(1)
@@ -84,7 +80,7 @@ public class Database {
                 ))
                 .toArray(Message[]::new);
 
-            chatNameObjMap.put(chatName, new Chat(acctList, msgHistory, chatName));
+            chatNameObjMap.put(chatName, new Chat(userList, msgHistory, chatName));
 
             // add chat to userChatMap for each user
             for(String user : userList) {
@@ -113,7 +109,7 @@ public class Database {
                 if(!m.getTime().equals(ldt)) continue;
                 if(m.getAccountName().equals(accountName)) {
                     if(mList == null) mList = new ArrayList<>();
-                    mList.addLast(m);
+                    mList.add(m);
                 }
             }
         }
@@ -156,11 +152,33 @@ public class Database {
      * @return List of chats needed
      */
     public List<Chat> getChats(String accountName) {
-        TODO.todo("Handle the case where no chats are found");
+    	 List<Chat> chats = new ArrayList<>();
+    	
+    	 // if user is admin,just get all da chats
+    	if(acctNameObjMap.get(accountName).getRole() == Role.ADMINISTRATOR) {
+    		for (Chat chat : chatNameObjMap.values()) {
+                chats.add(chat);
+            }
+    		
+    		return chats;
+    	}
+    	
         HashSet<String> chatNames = userChatMap.get(accountName);
-        List<Chat> chats = List.of();
+        
+        // TODO FORCE making chat b/c client freaks out when user gets no chats
+        if (chatNames == null) {
+            String[] lonelyUser = new String[] { accountName };
+            Chat emptyChat = new Chat(lonelyUser, accountName);
+            try {
+                this.addChat(lonelyUser, accountName);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return List.of(emptyChat);
+        }
+
         for (String chat : chatNames) {
-            chats.addLast(getChat(chat));
+            chats.add(getChat(chat));
         }
         return chats;
     }
@@ -173,10 +191,6 @@ public class Database {
      * @throws IOException
      */
     public void addChat(String[] userList, String chatName) throws IOException {
-        Account[] acctList = Arrays.stream(userList)
-        		.map(userName -> acctNameObjMap.get(userName))
-        		.toArray(Account[]::new);
-    	
     	// Save to local files
         Path filePath = Path.of(CHATS_DIR + chatName + ".txt");
 
@@ -186,7 +200,7 @@ public class Database {
                 StandardOpenOption.CREATE
         );
 
-        Chat toAdd = new Chat(acctList, new Message[0], chatName);
+        Chat toAdd = new Chat(userList, new Message[0], chatName);
         chatNameObjMap.put(chatName, toAdd);
         
         // add chat name for each user
@@ -206,5 +220,13 @@ public class Database {
      */
     public Account getAccount(String name) {
         return acctNameObjMap.get(name);
+    }
+
+    /**
+     * Get all the accounts
+     * @return all the accounts
+     */
+    public List<Account> getAccounts() {
+        return List.copyOf(acctNameObjMap.values());
     }
 }

@@ -1,31 +1,35 @@
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 /*
 This will hold all messages incoming from one object and outgoing to another object
  */
 public class RqstStore {
-    private SynchronousQueue<Message> incoming;
-    private SynchronousQueue<Message> outgoing;
+    private BlockingQueue<Object> incoming;
+    private BlockingQueue<Object> outgoing;
 
     public RqstStore() {
-    	incoming = new SynchronousQueue<>();
-    	outgoing = new SynchronousQueue<>();
+    	incoming = new LinkedBlockingQueue<>();
+    	outgoing = new LinkedBlockingQueue<>();
     }
     //Gets message from incoming queue (blocks until a message is available)
-    public Message getIncoming() throws InterruptedException {
-    	return incoming.take(); //retrieves and removes the head of queue
+    public Object getIncoming() throws InterruptedException {
+    	return incoming.take();
     }
     
-    //Adds message to incoming queue (blocks until a receiver is ready)
-    public void addToIncoming(Message msg) throws InterruptedException {
-    	incoming.put(msg);
+    //Adds message to incoming queue (blocks if necessary until space is available)
+    public void addToIncoming(Object obj) throws InterruptedException {
+    	incoming.put(obj);
     }
     //Gets a message from the outgoing queue (blocks until a message is available)
-    public Message getOutgoing() throws InterruptedException {
-    	return outgoing.take(); 
+    public Object getOutgoing() throws InterruptedException {
+    	return outgoing.take();
     }
-    //Adds message to outgoing queue (blocks until a receiver is ready)
+    //Adds message to outgoing queue (blocks if necessary until space is available)
     public void addToOutGoing(Message msg) throws InterruptedException {
     	outgoing.put(msg);
     }
     
+    public void addToOutGoing(Chat chat) throws InterruptedException {
+    	outgoing.put(chat);
+    }
 }

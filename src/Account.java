@@ -1,4 +1,6 @@
-public class Account {
+import java.io.Serializable;
+
+public class Account implements Serializable {
     private Role role;
     private String name;
     private String password;
