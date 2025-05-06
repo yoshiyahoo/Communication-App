@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DummyServer {
-
     public static void main(String[] args) {
     	while(true) {
             ServerSocket ss = null;

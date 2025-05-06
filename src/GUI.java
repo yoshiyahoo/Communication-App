@@ -1,3 +1,6 @@
+import java.util.*; //remove scanner when implementing graphics
+import java.io.*; //remove scanner when implementing graphics
+
 
 public class GUI extends Client{
 //	private Client client; // why do we have the client as an attribute?
