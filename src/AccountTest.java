@@ -1,51 +1,56 @@
-import java.time.LocalDateTime;
-
-import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-
-public class ChatTest {
-	private Chat chat;
-	private String[] users;
-	private Message[] msgs;
-
-	@Before
-	public void buildChat() {
-		this.users = new String[] {
-				"Karen",
-				"Bill"
-		};
-		this.msgs = new Message[] {
-				new Message("My Boss Sucks", "Karen", "KarenBill", LocalDateTime.now()),
-				new Message("You can't delete that", "Bill", "KarenBill", LocalDateTime.now()),
-				new Message("Oh shit", "Karen", "KarenBill", LocalDateTime.now()),
-				new Message("You can't delete that either", "Bill", "KarenBill", LocalDateTime.now())
-		};
-		this.chat = new Chat(users, msgs, "KarenBill");
-	}
-
-	@Test
-	public void CheckChatLength() {
-		assertEquals(this.chat.getUsersNames().length, this.users.length);
-    }
-
-	@Test
-	public void CheckMessageTiming() {
-		Message msg = new Message("Hi mom", "Tommy", "TommyMom", LocalDateTime.now());
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			fail();
-		}
-
-		assertNotEquals(msg.getTime(), LocalDateTime.now());
-	}
-
-	@Test
-	public void CheckMessageHistory() {
-		assertEquals(this.msgs, this.chat.getMsgHistory());
-	}
-}
+ import static org.junit.jupiter.api.Assertions.*;
+ 
+ public class AccountTest {
+ 	
+ 	@Test
+ 	public void testConstructor(){
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "Coco!987");
+ 		String role = anna.getRole().toString();
+ 		assertTrue(role == "EMPLOYEE");
+ 		assertEquals(anna.getName(), "Anna");
+ 		assertEquals(anna.getPassword(), "Coco!987");
+ 		assertNotNull(anna);
+ 	}
+ 	
+ 	@Test
+ 	public void testSetRole() {
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "Coco!987");
+ 		anna.setRole(Role.ADMINISTRATOR);
+ 		String role = anna.getRole().toString();
+ 		assertTrue(role == "ADMINISTRATOR");
+ 	}
+ 	
+ 	@Test
+ 	public void testSetPassword() {
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "");
+ 		anna.setPassword("Coco!987");
+ 		assertEquals(anna.getPassword(), "Coco!987");
+ 	}
+ 	
+ 	@Test
+ 	public void testGetRole() {
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "");
+ 		String role = anna.getRole().toString();
+ 		assertTrue(role == "EMPLOYEE");
+ 	}
+ 	
+ 	@Test
+ 	public void testGetName() {
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "");
+ 		assertTrue(anna.getName() == "Anna");
+ 	}
+ 	
+ 	@Test
+ 	public void testGetPassword() {
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "Coco!987");
+ 		assertEquals(anna.getPassword(), "Coco!987");
+ 	}
+ 	
+ 	@Test
+ 	public void testGetID() {
+ 		Account anna = new Account(Role.EMPLOYEE,"Anna", "Coco!987");
+ 		assertTrue(anna.getID() > 0);
+ 	}
+ 
+ }
