@@ -80,15 +80,15 @@ public class Server {
     	    NetworkInterface ni = interfaces.nextElement();
     	    if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) continue;
 
+            boolean isWifi = ni.getDisplayName().contains("Wi-Fi");
     	    Enumeration<InetAddress> addresses = ni.getInetAddresses();
     	    while (addresses.hasMoreElements()) {
     	        InetAddress addr = addresses.nextElement();
-    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
+    	        if (addr instanceof Inet4Address && !addr.isLoopbackAddress() && isWifi) {
     	        	return addr.getHostAddress();
     	        }
     	    }
     	}
-    	
     	return null;
     }
 
