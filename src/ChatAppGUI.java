@@ -175,13 +175,17 @@ public void appendMessage(String line) {
     private void loadSelectedChat() {
     	String chat = chatList.getSelectedValue();
     	
+    	if(chat == null) {
+    		return;
+    	}
+    	
     	for(Chat c : super.getChats()) {
     		if(chat.equals(c.getChatName())) {
     			this.currentChat = c;
     		}
     	}
     	
-    	if(chat == null || this.currentChat == null) {
+    	if(this.currentChat == null) {
     		return;
     	}
     	
