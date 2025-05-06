@@ -1,3 +1,4 @@
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -184,7 +185,7 @@ public class Server {
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt(); // propagate interrupt status
 		}
-    	
+
     	return null; // should never happen tho
     }
     
@@ -271,7 +272,6 @@ public class Server {
 	    }
     }
     
-    // TODO could hold a reference to main server
     private static class BackgroundHandlerServer extends Server implements Runnable {
         private ObjectOutputStream out;
         private ObjectInputStream in;
@@ -292,12 +292,12 @@ public class Server {
                 // Grab the login object from the client and check credentials
                 Login login = (Login) this.in.readObject();
                 if (!loginHandling(login)) {
-                    System.out.println("Login for User [" + login.getUsername() + "] Failed");
+                    System.out.println("Login for User [" + login.getUsername() + "]" + " at " + LocalDateTime.now() + " Failed");
                     out.writeObject(new Login(LoginType.FAILURE));
                     // Close connection with the client
                     return;
                 };
-                System.out.println("Login for User [" + login.getUsername() + "] Succeeded");
+                System.out.println("Login for User [" + login.getUsername() + "]" + " at " + LocalDateTime.now() + " Succeeded");
                 out.writeObject(new Login(LoginType.SUCCESS));
                 out.writeObject(data.getAccount(login.getUsername())); // Also send the client the account object
                 // Add the client to the list of connected clients

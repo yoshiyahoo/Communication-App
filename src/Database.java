@@ -176,11 +176,7 @@ public class Database {
             }
             return List.of(emptyChat);
         }
-<<<<<<< HEAD
-        List<Chat> chats = new ArrayList<>();
-=======
 
->>>>>>> 1427855 (admins can see all chats now)
         for (String chat : chatNames) {
             chats.add(getChat(chat));
         }
