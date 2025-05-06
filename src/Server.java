@@ -233,6 +233,8 @@ public class Server {
                 Object obj = popStore();
                 switch (obj) {
                     case Message msg -> {
+                        // Show the message
+                        System.out.println("Message sent!:" + msg);
                         // Save the current message
                         try {
                             data.saveMessage(msg);
@@ -280,6 +282,7 @@ public class Server {
                         // pop the user who sent the chat
                         //String userWhoSent = (String) popStore();
                         // save the current chat
+                        System.out.println("Chat sent!:" + ch);
                         try {
                             data.addChat(ch.getUsersNames(), ch.getChatName());
                         } catch (IOException e) {
