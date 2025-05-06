@@ -219,37 +219,40 @@ public class ChatAppGUI extends Client {
     	String user = usernameField.getText();
     	String pass = new String(passwordField.getPassword());
     	String address = addressField.getText();
-    	
-    	boolean success = true;
-    	
+
     	try {
 			super.startSocket(address);
 		} catch (Exception e) {
-			success = false;
+			loginError.setText("Connection Unsuccessful");
 		}
-    	
-    	success = success && super.login(user, pass);
 
-    	if(success) {
-    		currentUsername = user;
-    		userLabel.setText(currentUsername);
-    		cards.show(root, "chat");
-    		
-    		loginError.setText("");
+		LoginType status = super.login(user, pass);
 
-    		super.getChatFromServer();
-    		for(Chat chat : super.getChats()) {
-    			this.chatListModel.addElement(chat.getChatName());
-    		}
-    		
-        	super.getUserNamesFromServer();
+		switch (status) {
+			case SUCCESS -> {
+				currentUsername = user;
+				userLabel.setText(currentUsername);
+				cards.show(root, "chat");
 
-        	super.startClientThreads();
-        	
-    	} else {
-    		loginError.setText("Invalid credentials");
-    		super.closeSocket();
-    	}
+				loginError.setText("");
+
+				super.getChatFromServer();
+				for(Chat chat : super.getChats()) {
+					this.chatListModel.addElement(chat.getChatName());
+				}
+
+				super.getUserNamesFromServer();
+
+				super.startClientThreads();
+			}
+			case FAILURE -> {
+				loginError.setText("Invalid credentials");
+				super.closeSocket();
+			}
+			case LOGGED_IN -> {
+				loginError.setText("Account Already Logged In");
+			}
+		}
     }
     
     private void doLogout() {

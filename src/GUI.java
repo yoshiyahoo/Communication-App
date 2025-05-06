@@ -22,7 +22,7 @@ public class GUI extends Client{
 			username = this.scan.nextLine();
 			System.out.print("Password >>> ");
 			password = this.scan.nextLine();
-			success = super.login(username, password);
+			//success = super.login(username, password);
 		} while(!success);
 
 		System.out.println("\n=== Login Successful ===");

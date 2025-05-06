@@ -1,4 +1,4 @@
 enum LoginType {
 	SUCCESS,
-	FAILURE
+    LOGGED_IN, FAILURE
 }
