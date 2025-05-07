@@ -19,7 +19,7 @@ alt on SUCCESS
     Server --> Client: send List<Chat>
     Server --> Client: send String[] userList
     Client --> GUI: populate chatList & userList
-    GUI -> GUI: switch to chat card
+    GUI -> GUI: switch to chat display
 else on FAILURE/LOGGED_IN
     Client --> GUI: display loginError
 end
