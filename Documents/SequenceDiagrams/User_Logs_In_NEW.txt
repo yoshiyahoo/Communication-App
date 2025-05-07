@@ -1,0 +1,25 @@
+title User Logs In
+actor User
+participant GUI
+participant Client
+participant Server
+participant Database
+
+GUI -> User: show loginScreen()
+User -> GUI: enter username & password & server address
+GUI -> Client: startSocket(address)
+Client -> Server: TCP connect
+GUI -> Client: login(user, pass)
+Client -> Server: send Login object
+Server -> Database: checkLoginStatus(username, password)
+Database --> Server: return Account or failure
+Server --> Client: write LoginType (SUCCESS/FAILURE/LOGGED_IN)
+alt on SUCCESS
+    Server --> Client: send Account object
+    Server --> Client: send List<Chat>
+    Server --> Client: send String[] userList
+    Client --> GUI: populate chatList & userList
+    GUI -> GUI: switch to chat display
+else on FAILURE/LOGGED_IN
+    Client --> GUI: display loginError
+end

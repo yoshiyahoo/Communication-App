@@ -1,0 +1,12 @@
+title User Views and Selects a Chat
+actor User
+participant GUI
+participant Client
+participant Server
+
+User -> GUI: clicks on a conversation
+GUI -> Client: asks for that chat’s details
+Client -> Server: (if needed) fetch messages and participants
+Server --> Client: returns message history and user list
+Client --> GUI: sends the chat’s messages and who’s in it
+GUI -> User: Displays message history and participants

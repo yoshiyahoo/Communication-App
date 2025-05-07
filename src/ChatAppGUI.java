@@ -40,8 +40,11 @@ public class ChatAppGUI extends Client {
     }
 
     //Called by client's BackgroundHandler Client(or locally on send)) to append a line of chat text to history area
-    public void appendMessage(String line) {
-        historyArea.append(line);
+    public void appendMessage(String line, String chatName) {
+    	
+    	if(this.currentChat != null && this.currentChat.getChatName() == chatName) {
+    		historyArea.append(line);
+    	}
     }
 
     public ChatAppGUI() {
@@ -171,8 +174,12 @@ public class ChatAppGUI extends Client {
 
         userLabel = new JLabel(); // optionally pass `currentUsername` if available
         userLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        userLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        userLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         GUITools.ColorGUIComponents(userLabel);
+        if(this.getUserAccount() != null && this.getUserAccount().getRole() == Role.ADMINISTRATOR)
+        {
+            userLabel.setForeground(Color.RED);
+        }
 
         left.add(userLabel);
         left.add(Box.createVerticalStrut(5));
@@ -183,6 +190,7 @@ public class ChatAppGUI extends Client {
 
         // Center: title + history + input w/send button
         chatTitle = new JLabel("Chat Title");
+        chatTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
         GUITools.ColorGUIComponents(chatTitle);
 
         historyArea = new JTextArea();
@@ -209,6 +217,8 @@ public class ChatAppGUI extends Client {
         center.add(new JScrollPane(historyArea), BorderLayout.CENTER);
         center.add(inputPanel, BorderLayout.SOUTH);
         center.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        center.setFont(new Font(center.getFont().getName(), Font.BOLD, 16));
+
 
         // Right: user list
         userListModel = new DefaultListModel<>();
@@ -223,6 +233,7 @@ public class ChatAppGUI extends Client {
         right.add(userListLabel, BorderLayout.NORTH);
         right.add(new JScrollPane(userList), BorderLayout.CENTER);
         right.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        userListLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
 
         // Bottom: logout + error message
         JButton logoutBtn = new JButton("LOGOUT");

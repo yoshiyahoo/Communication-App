@@ -277,13 +277,14 @@ public class Client {
     							//now appends to the open history area
     							SwingUtilities.invokeLater(() ->
     								display.appendMessage(
-    										String.format(
-    					    				  "%s %02d:%02d >>> %s%n",
-    					    				  msg.getAccountName(),
-    					    				  msg.getTime().getHour(),
-    					    				  msg.getTime().getMinute(),
-    					    				  msg.getMsg()
-    					    		)));
+										String.format(
+					    				  "%s %02d:%02d >>> %s%n",
+					    				  msg.getAccountName(),
+					    				  msg.getTime().getHour(),
+					    				  msg.getTime().getMinute(),
+					    				  msg.getMsg()
+										),
+										chat.getChatName()));
     							break;
     						}
     					}
