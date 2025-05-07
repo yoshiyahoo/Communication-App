@@ -1,0 +1,12 @@
+title User Logs Out
+actor User
+participant GUI
+participant Client
+participant Server
+
+User -> GUI: click LOGOUT
+GUI -> Client: stopClientThreads()
+GUI -> Client: cleanUpOnLogout() & closeSocket()
+Client -> Server: socket closed
+Server -> Server: detect EOF, remove from clients map
+GUI -> User: return to & display login screen
