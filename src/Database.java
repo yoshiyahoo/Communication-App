@@ -7,23 +7,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-/*
- * User.txt schema
- * ROLE,NAME,PASSWORD
+/**
+ * This is our representation of a database.
+ * It stores all users in a Users.txt file and all chats in a Chats directory with each chat as a .txt file.
+ * You can add messages and chats, but once they are there, they cannot be removed.
+ * Note: The database does not handle asynchronous calls to methods directly, that is handled by the RqstStore.
+ * The database schemas are listed below
+ * @UserSchema User.txt schema
+ * @UserColumnList ROLE,NAME,PASSWORD
  * 
- * Chat folder schema
+ * @ChatSchema Chat folder schema
  * filename=[chatname].txt
  * 
- * user1,user2,user3...
- * TIME,USERNAME,MSG1
- * TIME,USERNAME,MSG2
- * TIME,USERNAME,MSG3
- * ...
+ * @ChatColumnList user1,user2,user3...
+ * @Row TIME,USERNAME,MSG1
+ * @Row TIME,USERNAME,MSG2
+ * @Row TIME,USERNAME,MSG3
+ * @Row ...
  */
-
 public class Database {
     //NOTE: multiple client threads can access and write to the db at the same time
-    //We can either make the maps concurrent or make the methods synchronous
+    //Handeled by RqstStore
     private HashMap<String, Account> acctNameObjMap;
     private HashMap<String, Chat> chatNameObjMap;
     public static final String USERS_PATH = "./Database/Users.txt";
@@ -164,16 +168,7 @@ public class Database {
     	
         HashSet<String> chatNames = userChatMap.get(accountName);
         
-        // TODO FORCE making chat b/c client freaks out when user gets no chats
         if (chatNames == null) {
-//            String[] lonelyUser = new String[] { accountName };
-//            Chat emptyChat = new Chat(lonelyUser, accountName);
-//            try {
-//                this.addChat(lonelyUser, accountName);
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            return List.of(emptyChat);
         	return chats;
         }
 
@@ -193,7 +188,6 @@ public class Database {
     public void addChat(String[] userList, String chatName) throws IOException {
     	// Save to local files
         Path filePath = Path.of(CHATS_DIR + chatName + ".txt");
-
         Files.write(
                 filePath,
                 (String.join(",", userList) + System.lineSeparator()).getBytes(),  // add newline

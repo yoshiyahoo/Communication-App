@@ -1,0 +1,5 @@
+admin,Josiah,pass
+employee,Adam,pass
+employee,Anna,pass
+employee,Kamari,pass
+employee,Jacob,pass

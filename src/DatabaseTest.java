@@ -9,6 +9,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * This class contains all tests for the database
+ */
 public class DatabaseTest {
     private Database db;
     private LocalDateTime testTime;
