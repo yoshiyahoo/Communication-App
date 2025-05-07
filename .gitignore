@@ -21,6 +21,9 @@
 *.zip
 *.tar.gz
 *.rar
+start/
+manifest.mf
+justfile
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -37,5 +40,5 @@ replay_pid*
 *.iml
 out/
 
-# All of the current chats
-Database/Chats
+# Database chats
+Database/Chats/*.txt

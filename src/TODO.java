@@ -5,6 +5,7 @@
  * and tell you which method to implement.
  * To use in a void function, call it.
  * To use in any other function, return this method and cast it to the return type.
+ * This class is intended only to be used when you don't have every method implemented but want to test your code.
  */
 public class TODO {
     /**

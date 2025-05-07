@@ -8,14 +8,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
+/**
+ * This module tests many client methods.
+ * Hard to test a lot of the methods in Client because
+ * they mainly interact with Server.
+ * In other words just tests Client getters.
+ */
 public class ClientTest {
-	/*
-	 * Hard to test a lot of the methods in Client because
-	 * they mainly interact with Server.
-	 * 
-	 * In other words just tests Client getters.
-	 */
-	
+
 	private static Client client = new Client();
 	private static List<Chat> testChats;
 	private static String[] testUsers;
