@@ -1,7 +1,8 @@
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 /*
-This will hold all messages incoming from one object and outgoing to another object
+ * This will hold all messages and chat incoming from one object and outgoing to another object
+ * This object allows for multiple threads to add and remove items without issue
  */
 public class RqstStore {
     private BlockingQueue<Object> incoming;

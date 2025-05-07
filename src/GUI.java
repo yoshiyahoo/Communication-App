@@ -1,9 +1,11 @@
 import java.util.*; //remove scanner when implementing graphics
 import java.io.*; //remove scanner when implementing graphics
 
-
+/**
+ * This GUI is mainly a testing console version to check the interactions between client and server
+ * This class is scratchwork, not used in the final version.
+ */
 public class GUI extends Client{
-//	private Client client; // why do we have the client as an attribute?
 	private Scanner scan; // remove when implementing graphics
 
 	//just for testing change later
@@ -48,10 +50,7 @@ public class GUI extends Client{
 				
 				switch(choice) {
 				case 1:
-					//finish this when makeChat() is made
-//					this.client.makeChat();
-//					System.out.println("Not made yet");
-					
+
 					for(String name : super.getUserList()) {
 						System.out.println(name);
 					}
@@ -124,8 +123,6 @@ public class GUI extends Client{
 					System.out.println();
 					break;
 				case 4:
-					//need to be able to switch to a chat to make
-//					System.out.println("Not made yet");
 					if(currentChat == null) {
 						System.out.println("\nCan't send a message if your not in a chat\n");
 						break;
@@ -144,9 +141,6 @@ public class GUI extends Client{
 					currentChat.addMessage(msg);
 					break;
 				case 5:
-					//maybe should have a logout method on client and server
-					//instead of just catching and handling on server
-					//re think about it
 					System.out.println("=== Logging out ===");
 					break;
 				default:

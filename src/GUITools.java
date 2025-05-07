@@ -2,6 +2,10 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.Border;
 
+/**
+ * This class is used for styling the ChatAppGUI, ensuring simplicity with styles.
+ * It keeps the app looking clean and allows easy changing of the styles.
+ */
 public class GUITools
 {
     // Should setup colors automatically for GUI objects.
@@ -107,7 +111,7 @@ public class GUITools
         }
         else
         {
-            //System.out.println("(" + object.getClass().getSimpleName() + ") Object not supported by auto-coloring.");
+
         }
     }
 

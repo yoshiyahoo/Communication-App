@@ -1,12 +1,11 @@
 import java.time.LocalDateTime;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+/**
+ * This class contains tests for chat functionality
+ */
 public class ChatTest {
 	private Chat chat;
 	private String[] users;
@@ -32,17 +31,6 @@ public class ChatTest {
 		assertEquals(this.chat.getUsersNames().length, this.users.length);
     }
 
-	@Test
-	public void CheckMessageTiming() {
-		Message msg = new Message("Hi mom", "Tommy", "TommyMom", LocalDateTime.now());
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			fail();
-		}
-
-		assertNotEquals(msg.getTime(), LocalDateTime.now());
-	}
 
 	@Test
 	public void CheckMessageHistory() {

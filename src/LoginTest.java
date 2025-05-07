@@ -2,6 +2,9 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+/**
+ * This class tests the login object
+ */
 public class LoginTest 
 {
     @Test
