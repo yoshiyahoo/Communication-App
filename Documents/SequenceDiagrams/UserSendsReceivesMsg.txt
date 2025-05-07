@@ -1,0 +1,24 @@
+title User Sends & Receives Messages
+actor User
+participant GUI
+participant Client
+participant OutgoingHandler
+participant Server
+participant RqstHandler
+participant IncomingHandler
+
+
+User -> GUI: type text & press Send
+GUI -> Client: sendMessage(text)
+Client -> Client: create Message obj
+Client -> Client.RqstStore: addToOutGoing(msg)
+OutgoingHandler -> Client.RqstStore: getOutgoing()
+OutgoingHandler -> Server: writeObject(msg)
+Server -> Server.RqstStore: pushStore(msg)
+RqstHandler -> Server.RqstStore: popStore()
+RqstHandler -> Database: saveMessage(msg)
+RqstHandler -> Server: for each recipient → sendMsg(user, msg)
+IncomingHandler -> Server: readObject() (msg)
+IncomingHandler -> Client.RqstStore : addToIncoming(msg)
+Client -> IncomingHandler: getIncoming()
+Client -> GUI: appendMessage(formatted line)
