@@ -4,9 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import java.util.concurrent.*; //for managing and controlling thread execution 
 
-/**
- * These are the unit tests for the request store
- */
+
 public class RqstStoreTest{
 	
 	// A single-threaded scheduler used to defer puts in order to unblock take() in tests

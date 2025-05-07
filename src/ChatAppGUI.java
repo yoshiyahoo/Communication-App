@@ -1,11 +1,8 @@
+
 import java.awt.*;
 import java.util.ArrayList;
 import javax.swing.*;
-/**
- * This is the GUI/Frontend used for the client.
- * It supports login, creating chats, sending messages, and switching between chats
- * This is expected to work with Client to show data to the end user
- */
+
 public class ChatAppGUI extends Client {
 
     private JFrame frame;
@@ -21,6 +18,8 @@ public class ChatAppGUI extends Client {
     private JLabel userLabel; //for adding on top of the add chat button
 
     //Chat components
+//    private DefaultListModel<String> chatListModel;
+//    private JList<String> chatList;
     private DefaultListModel<String> chatListModel;
     private JList<String> chatList;
     private DefaultListModel<String> userListModel;
@@ -31,12 +30,22 @@ public class ChatAppGUI extends Client {
     private JLabel chatError;
     private Chat currentChat;
 
+    // uncomment to test
+//    public static void main(String [] args) {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+//    }
     // Called by the client's BackgroundHandlerCLient(view SwingUtilities.invokeLater) when a new Chat arrives from the server
     public void addChatToList(String chatName) {
         //avoid duplicates
         if (!chatListModel.contains(chatName)) {
             chatListModel.addElement(chatName);
         }
+
+//    	System.out.println(chatName + " made it to: " + super.getUserAccount().getName());
+        //select the newly added chat(this dont work maybe later fix bugs with it if possible)
+        //int idx = chatListModel.indexOf(chatName);
+        //chatList.setSelectedIndex(idx);
+        //chatList.ensureIndexIsVisible(idx);
     }
 
     //Called by client's BackgroundHandler Client(or locally on send)) to append a line of chat text to history area
@@ -48,6 +57,8 @@ public class ChatAppGUI extends Client {
     }
 
     public ChatAppGUI() {
+//    	SwingUtilities.invokeLater(() -> new ChatAppGUI().init());
+
         this.currentChat = null;
         this.currentUsername = "";
     }
@@ -96,7 +107,7 @@ public class ChatAppGUI extends Client {
         usernameField.setAlignmentX(Component.CENTER_ALIGNMENT);
         GUITools.ColorGUIComponents(usernameField);
 
-        // Password
+// Password
         JLabel passLabel = new JLabel("Password:");
         passLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         GUITools.ColorGUIComponents(passLabel);
@@ -106,7 +117,7 @@ public class ChatAppGUI extends Client {
         passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
         GUITools.ColorGUIComponents(passwordField);
 
-        // Address
+// Address
         JLabel addressLabel = new JLabel("Server Address:");
         addressLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         GUITools.ColorGUIComponents(addressLabel);
@@ -329,6 +340,9 @@ public class ChatAppGUI extends Client {
     }
 
     private void doLogout() {
+        //might want to remove this later
+//    	chatList.clearSelection();
+
         historyArea.setText("");
 
         usernameField.setText("");
@@ -337,6 +351,8 @@ public class ChatAppGUI extends Client {
 
         super.stopClientThreads();
 
+//    	System.out.println("Threads should have stopped");
+//    	System.exit(0);
         super.cleanUpOnLogout();
         super.closeSocket();
     }
@@ -361,7 +377,21 @@ public class ChatAppGUI extends Client {
         chatTitle.setText(chat);
         //wipe out old text
         historyArea.setText("");
+        //append each msg with newline
+//    	for(Message msg : this.currentChat.getMsgHistory()) {
+//    		historyArea.setText(
+//    				historyArea.getText()
+//    				+ "\n"
+//    				+ msg.getAccountName()
+//    				+ " "
+//    				+ msg.getTime().getHour()
+//    				+ ":"
+//    				+ msg.getTime().getMinute()
+//    				+ " >>> "
+//    				+ msg.getMsg()
+//    		);
 
+        //}
         for (Message msg : this.currentChat.getMsgHistory()) {
             String line = String.format(
                     "%s %02d:%02d >>> %s%n",
@@ -374,7 +404,7 @@ public class ChatAppGUI extends Client {
         }
 
         historyArea.setCaretPosition(historyArea.getDocument().getLength());
-
+        //this dont work yet idk but it supposed to add users currently in gc to the right 
         userListModel.clear();
         for (String name : this.currentChat.getUsersNames()) {
             userListModel.addElement(name);
@@ -506,6 +536,7 @@ public class ChatAppGUI extends Client {
     }
 
     private void createNewChat(JDialog dlg, ArrayList<String> newChatUsers, JTextField nameIn) {
+        //super.makeChat(newChatUsers.toArray(new String[0]), nameIn.getText());
         String chatName = nameIn.getText().trim();
         if (chatName.isEmpty()) {
             return;
@@ -515,6 +546,7 @@ public class ChatAppGUI extends Client {
 
         //immediately add to the UI
         addChatToList(chatName);
+
         dlg.dispose();
     }
 }

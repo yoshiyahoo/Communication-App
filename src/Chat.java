@@ -2,16 +2,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-/**
- * This is a chat that contains users and messages.
- * The object is meant to be sent over the network.
- * You can only add messages, you can't remove them.
+/*
+This is a chat that contains users and messages
+The object is meant to be sent over the network
+You can only add messages, you can't remove
  */
 public class Chat implements Serializable {
     private List<Message> msgHistory;
     private String chatName;
     private List<String> usersNames;
     
+    //Clients shouldn't get Accounts of other users
+    //So I made this one but probably should remove/change the others
     public Chat(String[] usersNames, String chatName) {
     	this.usersNames = new ArrayList<>(Arrays.asList(usersNames));
     	this.chatName = chatName;

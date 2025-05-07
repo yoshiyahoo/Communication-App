@@ -12,19 +12,9 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * This server handles many clients asynchronously via TCP connections through sockets.
- * The server manages read/write operations to the database.
- * The protocol documentation states the chronological order things must be sent and received in.
- * @LoginProtocol Receive: Login Object with Username and password. Receive: Login Object with login type.
- * @SuccessfulLoginProtocol Send: Account information of the logged in client
- * Send: all relevant chat objects
- * Send: message or chat at any time.
- * Receive: message or chat at any time.
- * @FailedLoginProtocol Disconnect the client
- */
 public class Server {
 	// NOTE client gets added inside bg handler after login success
     // The string is the account username
@@ -52,18 +42,27 @@ public class Server {
     }
 
     private static void initialStartUp() throws IOException {
-        // Open a server socket on a specific port
+        // 1. Open a server socket on a specific port
+        // create ServerSocket listeningSocket on PORT
         server = new ServerSocket(PORT);
         server.setReuseAddress(true);
 
         // 2. Print startup message
-        System.out.println("Server started on IP: " + getHostAddr() +
+        // print "Server started on port " + PORT
+        System.out.println("Server started on IP: " + getHostAddr() + 
         		", Port: " + PORT);
 
+        // 3. (Optional) Initialize data structures for clients
         // create List or Map to track connected clients
         clients = new ConcurrentHashMap<>();
         data = new Database();
         requestStore = new RqstStore();
+
+        // 4. (Optional) Set up a thread pool (for handling clients)
+        // initialize ExecutorService or thread pool
+
+        // 5. (Optional) Load server config or resources
+        // load config file if any
 
         // Start the RqstHandler thread
         new Thread(new RqstHandler()).start();
@@ -222,9 +221,10 @@ public class Server {
 
     // to broadcast messages in rqstStore
     private static class RqstHandler extends Server implements Runnable {
+        //private final Server server;
 
 	    public RqstHandler() {
-
+	        //this.server = server;
 	    }
 	    
 	    @Override
@@ -280,12 +280,14 @@ public class Server {
                     }
                     case Chat ch -> {
                         // pop the user who sent the chat
+                        //String userWhoSent = (String) popStore();
                         // save the current chat
                         System.out.println("Chat sent!:" + ch);
                         try {
                             data.addChat(ch.getUsersNames(), ch.getChatName());
                         } catch (IOException e) {
                             // The client disconnected
+                            //clients.remove(userWhoSent);
                         }
 
                         HashSet<String> userSet = new HashSet<String>();
@@ -321,6 +323,7 @@ public class Server {
                                 System.err.println(errStr);
                                 throw new RuntimeException(errStr, e);
                             }
+
                         }
                     }
                     case null, default -> {

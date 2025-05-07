@@ -6,10 +6,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This class is mainly used for testing the protocol with the client/making protocol changes.
- * It is not used in the final build
- */
 public class DummyServer {
     public static void main(String[] args) {
     	while(true) {
@@ -50,6 +46,12 @@ public class DummyServer {
                 }
                 System.out.println("<<< Login Worked >>>\n");
 
+                //test sending initial chats
+//                Account[] users = { 
+//                    test,
+//                    new Account(Role.EMPLOYEE, "Bob", "password"),
+//                    new Account(Role.EMPLOYEE, "John", "password")
+//                };
                 String[] userNames = {
                     "test",
                     "Bob",
@@ -117,5 +119,7 @@ public class DummyServer {
                 }
             }
     	}
+
+//        System.out.println("\n<<< Exiting Server >>>");
     }
 }

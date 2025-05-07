@@ -7,18 +7,6 @@ import javax.swing.SwingUtilities;
 
 import java.io.*;
 
-/**
- * This is the main client and driver of the app.
- * This coordinates all connections with the server including logins, sending messages, and sending chats,
- * as well as operating the GUI.
- * The protocol documentation states the chronological order things must be sent and received in.
- * @LoginProtocol Send: Login Object with username and password. Receive: Login Object with login type.
- * @SuccessfulLoginProtocol Receive: Account object containing user info
- * Receive: All relevant chats.
- * Send: message or chat at any time.
- * Receive: message or chat at any time.
- * @FailedLoginProtocol Retry the login
- */
 public class Client {
     private static Socket socket = null;
     private static ObjectOutputStream out;
@@ -53,9 +41,10 @@ public class Client {
     }
     
     /**
-    * For starting socket and in/out socket streams and creating the RqstStore
+    * For starting socket and in/out socket streams
+    * Also make a new request store
     */
-    public static void startSocket(String host) throws IOException {
+    public static void startSocket(String host) throws UnknownHostException, IOException {
       requestStore = new RqstStore();
 
       socket = new Socket(host, 42069);
@@ -64,7 +53,7 @@ public class Client {
     }
     
     /**
-     * For safely closing the socket.
+     * For safely closing socket
      */
     public static void closeSocket() {
     	try {
@@ -91,7 +80,8 @@ public class Client {
     /**
      * For adding new messages to the outgoing queue
      * Client --> Server
-     * @param msg the message to send
+     * 
+     * @param msg
      */
     public void sendMsg(Message msg) {
     	try {
@@ -104,6 +94,7 @@ public class Client {
 
     /**
      * gets chatList from Client for GUI
+     * 
      * @return	List<Chat>
      */
     public List<Chat> getChats() {
@@ -112,6 +103,7 @@ public class Client {
     
     /**
      * gets userList from Client for GUI
+     * 
      * @return String[]
      */
     public String[] getUserList() {
@@ -120,6 +112,7 @@ public class Client {
     
     /**
      * gets user account for GUI when creating a message object
+     * 
      * @return Account
      */
     public Account getUserAccount() {
@@ -158,6 +151,7 @@ public class Client {
 
     /**
      * For handling user login
+     * 
      * @param username	String username tied to users account
      * @param password	String password tied to users account
      * @return			LoginType that indicates whether or not login was successful
@@ -208,6 +202,7 @@ public class Client {
     /**
      * This takes in a partial name entry from a user search and returns an List<String>
      * that has all user's names that contains partialName String.
+     * 
      * @param partialName	A partial name string for searching
      * @return 				ArrayList<String> for all names hat contains partialName
      */
@@ -225,6 +220,7 @@ public class Client {
 
     /**
      * For sending new chat info to server and adds new chat to clients chat list locally
+     * 
      * @param users			String[] of all users in new chat
      * @param chatname		String for the name of the new chat
      */
@@ -326,6 +322,7 @@ public class Client {
 				}
 			}
 		}
+    	
     }
     
     /**
@@ -353,5 +350,6 @@ public class Client {
 				}
 			}
 		}
+    	
     }
 }

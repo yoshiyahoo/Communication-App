@@ -1,10 +1,7 @@
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * These are text messages that will be passed between the server and client.
- * These messages are immutable. Once it is created, it cannot be changed.
- */
+//These are text messages that will be passed between the server and client application
 public class Message implements Serializable {
 	private String msg;
 	private LocalDateTime time;

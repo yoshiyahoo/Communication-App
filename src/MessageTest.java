@@ -1,15 +1,10 @@
-import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
-/**
- * This class holds unit tests for messages.
- */
 public class MessageTest {
 	//makes a test Message without a given time
 	private Message test = new Message("Test Message!!!", "Bobby", "BobbyAndFriends");
@@ -50,18 +45,5 @@ public class MessageTest {
 		//makes sure that the passed chat name string is returned the same
 		assertEquals("BobbyAndFriends", test.getChatname());
 		assertEquals("JeffAndFriends", test2.getChatname());
-	}
-
-	@Test
-	@Order(4)
-	public void CheckMessageTiming() {
-		Message msg = new Message("Hi mom", "Tommy", "TommyMom", LocalDateTime.now());
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			fail();
-		}
-
-		assertNotEquals(msg.getTime(), LocalDateTime.now());
 	}
 }

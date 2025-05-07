@@ -1,11 +1,5 @@
 import java.io.Serializable;
 
-/**
- * This is the first step in the protocl.
- * This object is a login processor. It has two main states, a login request state which uses the username and password,
- * and a login response state, which uses the loginType field.
- * The Client uses the login request state while the server gives the response state.
- */
 public class Login implements Serializable {
 	private LoginType loginType;
     private String username;
